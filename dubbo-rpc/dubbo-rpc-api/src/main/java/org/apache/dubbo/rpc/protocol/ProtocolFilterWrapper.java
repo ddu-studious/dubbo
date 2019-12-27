@@ -122,6 +122,7 @@ public class ProtocolFilterWrapper implements Protocol {
         return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
     }
 
+    // TODO 服务调用refer
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {

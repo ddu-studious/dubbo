@@ -66,6 +66,7 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
         return proxyFactory.getProxy(invoker, generic);
     }
 
+    // TODO 客户端使用
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {

@@ -181,9 +181,10 @@ public class RegistryProtocol implements Protocol {
         return overrideListeners;
     }
 
+    // TODO 提供方将接口注册到注册中心
     public void register(URL registryUrl, URL registeredProviderUrl) {
         Registry registry = registryFactory.getRegistry(registryUrl);
-        registry.register(registeredProviderUrl);
+        registry.register(registeredProviderUrl); // FailbackRegistry
     }
 
     public void unregister(URL registryUrl, URL registeredProviderUrl) {
@@ -216,11 +217,12 @@ public class RegistryProtocol implements Protocol {
                 registryUrl, registeredProviderUrl);
         //to judge if we need to delay publish
         boolean register = registeredProviderUrl.getParameter("register", true);
-        if (register) {
+        if (register) { // TODO 判断是否要注册到注册中心
             register(registryUrl, registeredProviderUrl);
             providerInvokerWrapper.setReg(true);
         }
 
+        // TODO 定于注册中心，来完成文件内容修改
         // Deprecated! Subscribe to override rules in 2.6.x or before.
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
@@ -413,6 +415,7 @@ public class RegistryProtocol implements Protocol {
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
         Invoker invoker = cluster.join(directory);
+        // TODO 客户端注册到注册中心
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
         return invoker;
     }

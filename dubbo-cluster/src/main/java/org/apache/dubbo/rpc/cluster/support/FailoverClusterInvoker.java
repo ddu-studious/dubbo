@@ -44,6 +44,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.RETRIES_KEY;
  * <a href="http://en.wikipedia.org/wiki/Failover">Failover</a>
  *
  */
+// TODO
 public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(FailoverClusterInvoker.class);

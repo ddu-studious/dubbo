@@ -27,14 +27,17 @@ import org.apache.dubbo.rpc.proxy.InvokerInvocationHandler;
 /**
  * JavaassistRpcProxyFactory
  */
+// TODO 默认代理
 public class JavassistProxyFactory extends AbstractProxyFactory {
 
+    // TODO 客户端
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
         return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
     }
 
+    // TODO 服务端
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
         // TODO Wrapper cannot handle this scenario correctly: the classname contains '$'

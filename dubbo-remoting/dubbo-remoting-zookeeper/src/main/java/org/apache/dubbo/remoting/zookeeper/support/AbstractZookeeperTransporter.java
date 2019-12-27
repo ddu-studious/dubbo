@@ -37,6 +37,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
  * <p>
  * If you want to extends this, implements createZookeeperClient.
  */
+// TODO 连接zk
 public abstract class AbstractZookeeperTransporter implements ZookeeperTransporter {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperTransporter.class);
     private final Map<String, ZookeeperClient> zookeeperClientMap = new ConcurrentHashMap<>();

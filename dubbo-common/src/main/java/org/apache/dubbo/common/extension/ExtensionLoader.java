@@ -611,6 +611,7 @@ public class ExtensionLoader<T> {
         return getExtensionClasses().get(name);
     }
 
+    // cachedClasses 缓存扩展Class
     private Map<String, Class<?>> getExtensionClasses() {
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {

@@ -88,6 +88,7 @@ public abstract class AbstractRegistry implements Registry {
     // Local disk cache file
     private File file;
 
+    // TODO 缓存注册中心服务端提供方接口到文件
     public AbstractRegistry(URL url) {
         setUrl(url);
         // Start file save timer
@@ -154,6 +155,7 @@ public abstract class AbstractRegistry implements Registry {
         return lastCacheChanged;
     }
 
+    // TODO 将注册到注册中心的服务保存到文件中
     public void doSaveProperties(long version) {
         if (version < lastCacheChanged.get()) {
             return;
@@ -383,6 +385,7 @@ public abstract class AbstractRegistry implements Registry {
      * @param listener listener
      * @param urls     provider latest urls
      */
+    // TODO 保存文件
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");

@@ -572,7 +572,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
 
             // export to local if the config is not remote (export to remote only when config is remote)
-            if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
+            if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) { // TODO export
                 exportLocal(url);
             }
             // export to remote if the config is not local (export to local only when config is local)

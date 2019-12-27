@@ -89,17 +89,17 @@ public class ClassUtils {
     public static ClassLoader getClassLoader(Class<?> clazz) {
         ClassLoader cl = null;
         try {
-            cl = Thread.currentThread().getContextClassLoader();
+            cl = Thread.currentThread().getContextClassLoader(); // TODO 当前线程 ClassLoader
         } catch (Throwable ex) {
             // Cannot access thread context ClassLoader - falling back to system class loader...
         }
         if (cl == null) {
             // No thread context class loader -> use class loader of this class.
-            cl = clazz.getClassLoader();
+            cl = clazz.getClassLoader(); // TODO ExtensionLoader ClassLoader
             if (cl == null) {
                 // getClassLoader() returning null indicates the bootstrap ClassLoader
                 try {
-                    cl = ClassLoader.getSystemClassLoader();
+                    cl = ClassLoader.getSystemClassLoader(); // TODO 系统 ClassLoader
                 } catch (Throwable ex) {
                     // Cannot access system ClassLoader - oh well, maybe the caller can live with null...
                 }
