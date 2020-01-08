@@ -50,7 +50,7 @@ public class InvokerWrapper<T> implements Invoker<T> {
     public boolean isAvailable() {
         return invoker.isAvailable();
     }
-
+    // TODO 接口调用第九步
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         return invoker.invoke(invocation);

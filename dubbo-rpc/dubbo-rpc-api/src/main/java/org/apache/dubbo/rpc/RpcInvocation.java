@@ -92,6 +92,7 @@ public class RpcInvocation implements Invocation, Serializable {
                 invocation.getArguments(), invocation.getAttachments(), invocation.getInvoker());
     }
 
+    // TODO 接口调用第二步
     public RpcInvocation(Method method, Object[] arguments) {
         this(method, arguments, null);
     }

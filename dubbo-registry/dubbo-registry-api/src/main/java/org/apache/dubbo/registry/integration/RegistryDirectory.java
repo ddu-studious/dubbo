@@ -557,7 +557,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             }
         }
     }
-
+    // TODO 接口调用第五步
     @Override
     public List<Invoker<T>> doList(Invocation invocation) {
         if (forbidden) {

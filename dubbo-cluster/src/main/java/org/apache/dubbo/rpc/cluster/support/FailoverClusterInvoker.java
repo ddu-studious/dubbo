@@ -52,7 +52,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
     public FailoverClusterInvoker(Directory<T> directory) {
         super(directory);
     }
-
+    // TODO 接口调用第六步
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {

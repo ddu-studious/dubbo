@@ -75,7 +75,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
         return client.getChannelHandler();
     }
 
-    // TODO 客户端请求
+    // TODO 客户端请求、// TODO 接口调用第十六步
     @Override
     public CompletableFuture<Object> request(Object request, int timeout) throws RemotingException {
         return client.request(request, timeout);

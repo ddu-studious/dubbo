@@ -67,7 +67,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
     public Class<T> getInterface() {
         return directory.getInterface();
     }
-
+    // TODO 接口调用第三步
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         Result result = null;

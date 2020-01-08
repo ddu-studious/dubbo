@@ -108,7 +108,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
-    // TOOD Dubbo 在注册中心注册节点
+    // TODO Dubbo 在注册中心注册节点
     @Override
     public void doRegister(URL url) {
         try {

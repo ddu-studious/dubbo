@@ -117,7 +117,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      * @return the invoker which will final to do invoke.
      * @throws RpcException exception
      */
-    // TODO
+    // TODO 接口调用第七步
     protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
 
@@ -147,7 +147,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         }
         return invoker;
     }
-
+    // TODO 接口调用第八步
     private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
 
@@ -234,6 +234,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
     }
 
     // TODO 客户端调用cluster
+    // TODO 接口调用第四步
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
         checkWhetherDestroyed();

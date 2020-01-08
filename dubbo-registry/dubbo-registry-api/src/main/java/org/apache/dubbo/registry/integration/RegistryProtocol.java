@@ -379,7 +379,7 @@ public class RegistryProtocol implements Protocol {
                 .setProtocol(url.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY))
                 .removeParameter(REGISTRY_KEY)
                 .build();
-        Registry registry = registryFactory.getRegistry(url);
+        Registry registry = registryFactory.getRegistry(url); // TODO ExtensionLoader 流转   ZookeeperRegistry
         if (RegistryService.class.equals(type)) {
             return proxyFactory.getInvoker((T) registry, type, url);
         }
@@ -410,7 +410,7 @@ public class RegistryProtocol implements Protocol {
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url));
             registry.register(directory.getRegisteredConsumerUrl());
         }
-        directory.buildRouterChain(subscribeUrl);
+        directory.buildRouterChain(subscribeUrl); // TODO Router
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
