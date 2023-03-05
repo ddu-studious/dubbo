@@ -116,6 +116,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * Actually，when the {@link ExtensionLoader} init the {@link Protocol} instants,it will automatically wraps two
      * layers, and eventually will get a <b>ProtocolFilterWrapper</b> or <b>ProtocolListenerWrapper</b>
      */
+    // 注册的时候，拿到的是RegistryProtocol；作为提供方启动服务使用的是DubboProtocol
     private static final Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     /**
@@ -293,11 +294,12 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         // Use default configs defined explicitly on global configs
         completeCompoundConfigs();
         // Config Center should always being started first.
-        startConfigCenter();
-        checkDefault();
-        checkProtocol();
-        checkApplication();
+        startConfigCenter(); // 加载配置中心配置，其他模块Application、Protocol都会优先使用配置中心配置
+        checkDefault(); // 默认Provider配置加载
+        checkProtocol(); // 协议转换
+        checkApplication(); // 应用配置
         // if protocol is not injvm checkRegistry
+        // 如果协议不是jvm
         if (!isOnlyInJvm()) {
             checkRegistry();
         }
@@ -449,7 +451,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
-        List<URL> registryURLs = loadRegistries(true);
+        List<URL> registryURLs = loadRegistries(true); // 加载注册中心
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);
             ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);
@@ -604,7 +606,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
-                        Exporter<?> exporter = protocol.export(wrapperInvoker);
+                        Exporter<?> exporter = protocol.export(wrapperInvoker); // 创建远程调用服务端
                         exporters.add(exporter);
                     }
                 } else {
@@ -792,7 +794,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         return port;
     }
 
-    private String getValueFromConfig(ProtocolConfig protocolConfig, String key) {
+    private String getValueFromConfig(ProtocolConfig protocolConfig, String key) { // 获取环境变量或系统变量配置的协议端口 : DUBBO_DUBBO_IP_TO_BIND or DUBBO_IP_TO_BIND
         String protocolPrefix = protocolConfig.getName().toUpperCase() + "_";
         String port = ConfigUtils.getSystemProperty(protocolPrefix + key);
         if (StringUtils.isEmpty(port)) {
@@ -892,7 +894,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         } else {
             String[] arr = COMMA_SPLIT_PATTERN.split(protocolIds);
             List<ProtocolConfig> tmpProtocols = CollectionUtils.isNotEmpty(protocols) ? protocols : new ArrayList<>();
-            Arrays.stream(arr).forEach(id -> {
+            Arrays.stream(arr).forEach(id -> { // arr 如果是新的，则加入：tmpProtocols
                 if (tmpProtocols.stream().noneMatch(prot -> prot.getId().equals(id))) {
                     tmpProtocols.add(ConfigManager.getInstance().getProtocol(id).orElseGet(() -> {
                         ProtocolConfig protocolConfig = new ProtocolConfig();

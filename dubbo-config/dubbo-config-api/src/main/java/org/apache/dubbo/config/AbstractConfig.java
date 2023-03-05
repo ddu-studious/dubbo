@@ -416,7 +416,7 @@ public abstract class AbstractConfig implements Serializable {
 
     private static String calculatePropertyFromGetter(String name) {
         int i = name.startsWith("get") ? 3 : 2;
-        return StringUtils.camelToSplitName(name.substring(i, i + 1).toLowerCase() + name.substring(i + 1), ".");
+        return StringUtils.camelToSplitName(name.substring(i, i + 1).toLowerCase() + name.substring(i + 1), "."); // getBeanName  ==> bean.name
     }
 
     private static String calculateAttributeFromGetter(String getter) {
@@ -548,7 +548,7 @@ public abstract class AbstractConfig implements Serializable {
      */
     public void refresh() {
         try {
-            CompositeConfiguration compositeConfiguration = Environment.getInstance().getConfiguration(getPrefix(), getId());
+            CompositeConfiguration compositeConfiguration = Environment.getInstance().getConfiguration(getPrefix(), getId()); // 在配置中中，找到对应配置前缀的配置，通过set方法赋值到对象上
             Configuration config = new ConfigConfigurationAdapter(this);
             if (Environment.getInstance().isConfigCenterFirst()) {
                 // The sequence would be: SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration -> AbstractConfig -> PropertiesConfiguration

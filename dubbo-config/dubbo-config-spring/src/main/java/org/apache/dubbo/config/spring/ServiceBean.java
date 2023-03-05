@@ -131,7 +131,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                         }
                     }
                     if (!providerConfigs.isEmpty()) {
-                        setProviders(providerConfigs);
+                        setProviders(providerConfigs); // 当没有提供协议配置的时候，会通过Provider上找
                     }
                 } else {
                     ProviderConfig providerConfig = null;
@@ -144,7 +144,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                         }
                     }
                     if (providerConfig != null) {
-                        setProvider(providerConfig);
+                        setProvider(providerConfig); // 设置 Provider 配置
                     }
                 }
             }
@@ -161,7 +161,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                     applicationConfig = config;
                 }
                 if (applicationConfig != null) {
-                    setApplication(applicationConfig);
+                    setApplication(applicationConfig); // 设置 Application 配置
                 }
             }
         }
@@ -184,7 +184,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             }
         }
 
-        if (StringUtils.isEmpty(getRegistryIds())) {
+        if (StringUtils.isEmpty(getRegistryIds())) { // 注册中心配置，优先级： Provider > Application
             if (getApplication() != null && StringUtils.isNotEmpty(getApplication().getRegistryIds())) {
                 setRegistryIds(getApplication().getRegistryIds());
             }
@@ -199,7 +199,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             Map<String, RegistryConfig> registryConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, RegistryConfig.class, false, false);
             if (CollectionUtils.isNotEmptyMap(registryConfigMap)) {
                 List<RegistryConfig> registryConfigs = new ArrayList<>();
-                if (StringUtils.isNotEmpty(registryIds)) {
+                if (StringUtils.isNotEmpty(registryIds)) { // 如果Provider 或者 Application上存在注册中心，则使用，否则使用容器中的
                     Arrays.stream(COMMA_SPLIT_PATTERN.split(registryIds)).forEach(id -> {
                         if (registryConfigMap.containsKey(id)) {
                             registryConfigs.add(registryConfigMap.get(id));
@@ -210,16 +210,16 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                 if (registryConfigs.isEmpty()) {
                     for (RegistryConfig config : registryConfigMap.values()) {
                         if (StringUtils.isEmpty(registryIds)) {
-                            registryConfigs.add(config);
+                            registryConfigs.add(config); // 使用容器中存在的注册中心
                         }
                     }
                 }
                 if (!registryConfigs.isEmpty()) {
-                    super.setRegistries(registryConfigs);
+                    super.setRegistries(registryConfigs); // 设置 注册中心 配置
                 }
             }
         }
-        if (getMetadataReportConfig() == null) {
+        if (getMetadataReportConfig() == null) { // 元数据 报告配置
             Map<String, MetadataReportConfig> metadataReportConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, MetadataReportConfig.class, false, false);
             if (metadataReportConfigMap != null && metadataReportConfigMap.size() == 1) {
                 super.setMetadataReportConfig(metadataReportConfigMap.values().iterator().next());
@@ -228,7 +228,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             }
         }
 
-        if (getConfigCenter() == null) {
+        if (getConfigCenter() == null) { // 配置中心
             Map<String, ConfigCenterConfig> configenterMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ConfigCenterConfig.class, false, false);
             if (configenterMap != null && configenterMap.size() == 1) {
                 super.setConfigCenter(configenterMap.values().iterator().next());
@@ -239,7 +239,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
 
         if (getMonitor() == null
                 && (getProvider() == null || getProvider().getMonitor() == null)
-                && (getApplication() == null || getApplication().getMonitor() == null)) {
+                && (getApplication() == null || getApplication().getMonitor() == null)) { // 监控中心
             Map<String, MonitorConfig> monitorConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, MonitorConfig.class, false, false);
             if (monitorConfigMap != null && monitorConfigMap.size() > 0) {
                 MonitorConfig monitorConfig = null;
@@ -257,7 +257,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             }
         }
 
-        if (getMetrics() == null) {
+        if (getMetrics() == null) { // 监控指标配置
             Map<String, MetricsConfig> metricsConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, MetricsConfig.class, false, false);
             if (metricsConfigMap != null && metricsConfigMap.size() > 0) {
                 MetricsConfig metricsConfig = null;
@@ -273,7 +273,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             }
         }
 
-        if (StringUtils.isEmpty(getProtocolIds())) {
+        if (StringUtils.isEmpty(getProtocolIds())) { // 协议
             if (getProvider() != null && StringUtils.isNotEmpty(getProvider().getProtocolIds())) {
                 setProtocolIds(getProvider().getProtocolIds());
             }
@@ -284,7 +284,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             Map<String, ProtocolConfig> protocolConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ProtocolConfig.class, false, false);
             if (protocolConfigMap != null && protocolConfigMap.size() > 0) {
                 List<ProtocolConfig> protocolConfigs = new ArrayList<ProtocolConfig>();
-                if (StringUtils.isNotEmpty(getProtocolIds())) {
+                if (StringUtils.isNotEmpty(getProtocolIds())) { // 协议不为空
                     Arrays.stream(COMMA_SPLIT_PATTERN.split(getProtocolIds()))
                             .forEach(id -> {
                                 if (protocolConfigMap.containsKey(id)) {
@@ -302,7 +302,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                 }
 
                 if (!protocolConfigs.isEmpty()) {
-                    super.setProtocols(protocolConfigs);
+                    super.setProtocols(protocolConfigs); // 协议配置
                 }
             }
         }

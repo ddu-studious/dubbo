@@ -84,20 +84,20 @@ public class AdaptiveClassCodeGenerator {
     /**
      * generate and return class code
      */
-    public String generate() {
+    public String generate() { // 以下以获取ProxyFactory自适应类为例的注释
         // no need to generate adaptive class since there's no adaptive method found.
         if (!hasAdaptiveMethod()) {
             throw new IllegalStateException("No adaptive method exist on extension " + type.getName() + ", refuse to create the adaptive class!");
         }
 
         StringBuilder code = new StringBuilder();
-        code.append(generatePackageInfo());
-        code.append(generateImports());
-        code.append(generateClassDeclaration());
+        code.append(generatePackageInfo()); // 包名
+        code.append(generateImports()); // 导入ExtensionLoader类
+        code.append(generateClassDeclaration()); // 类定义及继承 ProxyFactory
 
-        Method[] methods = type.getMethods();
+        Method[] methods = type.getMethods(); // ProxyFactory 的方法
         for (Method method : methods) {
-            code.append(generateMethod(method));
+            code.append(generateMethod(method)); // 方法组装
         }
         code.append("}");
 
@@ -136,6 +136,7 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 找到入参是URL类型的下标
      * get index of parameter with type URL
      */
     private int getUrlTypeIndex(Method method) {
@@ -154,12 +155,12 @@ public class AdaptiveClassCodeGenerator {
      * generate method declaration
      */
     private String generateMethod(Method method) {
-        String methodReturnType = method.getReturnType().getCanonicalName();
-        String methodName = method.getName();
-        String methodContent = generateMethodContent(method);
-        String methodArgs = generateMethodArguments(method);
-        String methodThrows = generateMethodThrows(method);
-        return String.format(CODE_METHOD_DECLARATION, methodReturnType, methodName, methodArgs, methodThrows, methodContent);
+        String methodReturnType = method.getReturnType().getCanonicalName(); // 返回名称
+        String methodName = method.getName(); // 方法名
+        String methodContent = generateMethodContent(method); // 方法体
+        String methodArgs = generateMethodArguments(method); // 方法入参
+        String methodThrows = generateMethodThrows(method); // 发放抛出异常
+        return String.format(CODE_METHOD_DECLARATION, methodReturnType, methodName, methodArgs, methodThrows, methodContent); // 方法组装
     }
 
     /**
@@ -189,20 +190,21 @@ public class AdaptiveClassCodeGenerator {
      * generate method URL argument null check
      */
     private String generateUrlNullCheck(int index) {
-        return String.format(CODE_URL_NULL_CHECK, index, URL.class.getName(), index);
+        return String.format(CODE_URL_NULL_CHECK, index, URL.class.getName(), index); // 如果URL入参为null，则抛出异常，否则拿到URL变量
     }
 
     /**
      * generate method content
      */
     private String generateMethodContent(Method method) {
-        Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);
+        Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class); // ProxyFactory方法的注解
         StringBuilder code = new StringBuilder(512);
         if (adaptiveAnnotation == null) {
-            return generateUnsupported(method);
+            return generateUnsupported(method); // 当实现的方法没有 @Adaptive 注解的时候，直接抛出异常作为方法的实现
         } else {
-            int urlTypeIndex = getUrlTypeIndex(method);
+            int urlTypeIndex = getUrlTypeIndex(method); // 找到入参是URL类型的下标
 
+            // 找到URL变量逻辑
             // found parameter in URL type
             if (urlTypeIndex != -1) {
                 // Null Point check
@@ -214,17 +216,25 @@ public class AdaptiveClassCodeGenerator {
 
             String[] value = getMethodAdaptiveValue(adaptiveAnnotation);
 
+            // 入参是否有 ：org.apache.dubbo.rpc.Invocation 变量
             boolean hasInvocation = hasInvocationArgument(method);
 
+            // 有org.apache.dubbo.rpc.Invocation入参的方法，如果org.apache.dubbo.rpc.Invocation变量为null，则抛出异常
+            // 存在则拿  org.apache.dubbo.rpc.Invocation.getMethodName()
             code.append(generateInvocationArgumentNullCheck(method));
 
+            // extName 获取逻辑定义
             code.append(generateExtNameAssignment(value, hasInvocation));
             // check extName == null?
             code.append(generateExtNameNullCheck(value));
 
+            // 通过 ExtensionLoader 获得 type 类型的类
+            // ExtensionLoader.getExtensionLoader(type).getExtension(extName)    extName 是通过URL.getParameter()获得的
+            // 获得的变量名 extension
             code.append(generateExtensionAssignment());
 
             // return statement
+            // extension.method(args)
             code.append(generateReturnAndInvocation(method));
         }
 
@@ -241,23 +251,31 @@ public class AdaptiveClassCodeGenerator {
     /**
      * generate extName assigment code
      */
+    // 以下以ProxyFactory为例
     private String generateExtNameAssignment(String[] value, boolean hasInvocation) {
         // TODO: refactor it
         String getNameCode = null;
-        for (int i = value.length - 1; i >= 0; --i) {
-            if (i == value.length - 1) {
-                if (null != defaultExtName) {
-                    if (!"protocol".equals(value[i])) {
-                        if (hasInvocation) {
+        for (int i = value.length - 1; i >= 0; --i) { // value : {"proxy"}
+            if (i == value.length - 1) { // 最后一个
+                if (null != defaultExtName) { // @SPI.value()的第一个值  ： javassist
+                    if (!"protocol".equals(value[i])) { // @Adaptive.value() != "protocol"
+                        if (hasInvocation) { // 方法有 org.apache.dubbo.rpc.Invocation 入参
+                            // 获取URL上的方法执行
                             getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")", value[i], defaultExtName);
+                            // value[i] = "proxy"
+                            // defaultExtName = "javassist"
                         } else {
+                            // 获取URL上对应的值
                             getNameCode = String.format("url.getParameter(\"%s\", \"%s\")", value[i], defaultExtName);
+                            // value[i] = "proxy"
+                            // defaultExtName = "javassist"
                         }
-                    } else {
+                    } else { // @Adaptive.value() == "protocol"
+                            // 如果 url.getProtocol() == null，在使用 defaultExtName="javassist"，否则url.getProtocol()
                         getNameCode = String.format("( url.getProtocol() == null ? \"%s\" : url.getProtocol() )", defaultExtName);
                     }
-                } else {
-                    if (!"protocol".equals(value[i])) {
+                } else { // @SPI.value() == null
+                    if (!"protocol".equals(value[i])) { // 非protocol
                         if (hasInvocation) {
                             getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")", value[i], defaultExtName);
                         } else {
@@ -314,6 +332,8 @@ public class AdaptiveClassCodeGenerator {
     /**
      * generate code to test argument of type <code>Invocation</code> is null
      */
+    // 有org.apache.dubbo.rpc.Invocation入参的方法，如果org.apache.dubbo.rpc.Invocation变量为null，则抛出异常
+    // 存在则拿  org.apache.dubbo.rpc.Invocation.getMethodName()
     private String generateInvocationArgumentNullCheck(Method method) {
         Class<?>[] pts = method.getParameterTypes();
         return IntStream.range(0, pts.length).filter(i -> CLASSNAME_INVOCATION.equals(pts[i].getName()))
@@ -328,7 +348,7 @@ public class AdaptiveClassCodeGenerator {
         String[] value = adaptiveAnnotation.value();
         // value is not set, use the value generated from class name as the key
         if (value.length == 0) {
-            String splitName = StringUtils.camelToSplitName(type.getSimpleName(), ".");
+            String splitName = StringUtils.camelToSplitName(type.getSimpleName(), "."); // 转成小写且前面加一个.
             value = new String[]{splitName};
         }
         return value;
@@ -346,13 +366,13 @@ public class AdaptiveClassCodeGenerator {
 
         // find URL getter method
         for (int i = 0; i < pts.length; ++i) {
-            for (Method m : pts[i].getMethods()) {
+            for (Method m : pts[i].getMethods()) { // 入参类型的方法遍历
                 String name = m.getName();
-                if ((name.startsWith("get") || name.length() > 3)
-                        && Modifier.isPublic(m.getModifiers())
-                        && !Modifier.isStatic(m.getModifiers())
-                        && m.getParameterTypes().length == 0
-                        && m.getReturnType() == URL.class) {
+                if ((name.startsWith("get") || name.length() > 3) // get方法且方法名长度大于3 例：getA
+                        && Modifier.isPublic(m.getModifiers()) // 公开
+                        && !Modifier.isStatic(m.getModifiers()) // 非静态方法
+                        && m.getParameterTypes().length == 0 // 参数类型数量=0
+                        && m.getReturnType() == URL.class) { // 返回类型是 URL 类型
                     return generateGetUrlNullCheck(i, pts[i], name);
                 }
             }
@@ -365,19 +385,20 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 判断URL是否为空
      * 1, test if argi is null
      * 2, test if argi.getXX() returns null
      * 3, assign url with argi.getXX()
      */
-    private String generateGetUrlNullCheck(int index, Class<?> type, String method) {
+    private String generateGetUrlNullCheck(int index, Class<?> type, String method) { // 下标 、 可返回URL的类、可返回URL的方法
         // Null point check
         StringBuilder code = new StringBuilder();
         code.append(String.format("if (arg%d == null) throw new IllegalArgumentException(\"%s argument == null\");\n",
-                index, type.getName()));
+                index, type.getName())); // 如果可返回URL的入参==null，则抛出异常
         code.append(String.format("if (arg%d.%s() == null) throw new IllegalArgumentException(\"%s argument %s() == null\");\n",
-                index, method, type.getName(), method));
+                index, method, type.getName(), method)); // 如果可以返回URL的入参执行可返回URL的方法，返回null，则抛出异常
 
-        code.append(String.format("%s url = arg%d.%s();\n", URL.class.getName(), index, method));
+        code.append(String.format("%s url = arg%d.%s();\n", URL.class.getName(), index, method)); // 取到URL变量
         return code.toString();
     }
 

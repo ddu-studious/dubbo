@@ -127,31 +127,31 @@ public abstract class Wrapper {
         }
 
         String name = c.getName();
-        ClassLoader cl = ClassUtils.getClassLoader(c);
+        ClassLoader cl = ClassUtils.getClassLoader(c); // 1、 当前线程；2、类；3、系统
 
         StringBuilder c1 = new StringBuilder("public void setPropertyValue(Object o, String n, Object v){ ");
         StringBuilder c2 = new StringBuilder("public Object getPropertyValue(Object o, String n){ ");
         StringBuilder c3 = new StringBuilder("public Object invokeMethod(Object o, String n, Class[] p, Object[] v) throws " + InvocationTargetException.class.getName() + "{ ");
 
-        c1.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
+        c1.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }"); // 前置转换 c.getName()
         c2.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
         c3.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
 
-        Map<String, Class<?>> pts = new HashMap<>(); // <property name, property types>
+        Map<String, Class<?>> pts = new HashMap<>(); // <property name, property types> // 类属性名，类属性类型
         Map<String, Method> ms = new LinkedHashMap<>(); // <method desc, Method instance>
         List<String> mns = new ArrayList<>(); // method names.
         List<String> dmns = new ArrayList<>(); // declaring method names.
 
         // get all public field.
         for (Field f : c.getFields()) {
-            String fn = f.getName();
+            String fn = f.getName(); // 属性名称
             Class<?> ft = f.getType();
             if (Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) {
                 continue;
             }
 
-            c1.append(" if( $2.equals(\"").append(fn).append("\") ){ w.").append(fn).append("=").append(arg(ft, "$3")).append("; return; }");
-            c2.append(" if( $2.equals(\"").append(fn).append("\") ){ return ($w)w.").append(fn).append("; }");
+            c1.append(" if( $2.equals(\"").append(fn).append("\") ){ w.").append(fn).append("=").append(arg(ft, "$3")).append("; return; }"); // setPropertyValue 赋值
+            c2.append(" if( $2.equals(\"").append(fn).append("\") ){ return ($w)w.").append(fn).append("; }"); // 取值
             pts.put(fn, ft);
         }
 
@@ -161,15 +161,16 @@ public abstract class Wrapper {
         if (hasMethod) {
             c3.append(" try{");
             for (Method m : methods) {
-                //ignore Object's method.
+                //ignore Object's method. // 忽略Object的方法
                 if (m.getDeclaringClass() == Object.class) {
                     continue;
                 }
 
-                String mn = m.getName();
-                c3.append(" if( \"").append(mn).append("\".equals( $2 ) ");
+                String mn = m.getName(); // invokeMethod(Object o, String n, Class[] p, Object[] v)
+                c3.append(" if( \"").append(mn).append("\".equals( $2 ) "); // 方法名相同
                 int len = m.getParameterTypes().length;
-                c3.append(" && ").append(" $3.length == ").append(len);
+                c3.append(" && ").append(" $3.length == ").append(len); // 入参相同
+                // 校验方法签名是否一致
 
                 boolean override = false;
                 for (Method m2 : methods) {
@@ -178,7 +179,7 @@ public abstract class Wrapper {
                         break;
                     }
                 }
-                if (override) {
+                if (override) { // 当存在方法名一样、入参数量一样的时候，校验每一个参数类型是否匹配
                     if (len > 0) {
                         for (int l = 0; l < len; l++) {
                             c3.append(" && ").append(" $3[").append(l).append("].getName().equals(\"")
@@ -189,6 +190,8 @@ public abstract class Wrapper {
 
                 c3.append(" ) { ");
 
+                // invokeMethod(Object o, String n, Class[] p, Object[] v)
+                // invoke 返回结果
                 if (m.getReturnType() == Void.TYPE) {
                     c3.append(" w.").append(mn).append('(').append(args(m.getParameterTypes(), "$4")).append(");").append(" return null;");
                 } else {
@@ -201,7 +204,7 @@ public abstract class Wrapper {
                 if (m.getDeclaringClass() == c) {
                     dmns.add(mn);
                 }
-                ms.put(ReflectUtils.getDesc(m), m);
+                ms.put(ReflectUtils.getDesc(m), m); // m是方法
             }
             c3.append(" } catch(Throwable e) { ");
             c3.append("     throw new java.lang.reflect.InvocationTargetException(e); ");
@@ -211,6 +214,7 @@ public abstract class Wrapper {
         c3.append(" throw new " + NoSuchMethodException.class.getName() + "(\"Not found method \\\"\"+$2+\"\\\" in class " + c.getName() + ".\"); }");
 
         // deal with get/set method.
+        // getPropertyValue(Object o, String n)
         Matcher matcher;
         for (Map.Entry<String, Method> entry : ms.entrySet()) {
             String md = entry.getKey();

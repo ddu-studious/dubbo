@@ -205,6 +205,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             }
         }
 
+        // 默认使用zk当配置中心，当然也是需要有zk当注册中心
         useRegistryForConfigIfNecessary();
     }
 
@@ -269,7 +270,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     }
 
 
-    void startConfigCenter() {
+    void startConfigCenter() { // 加载配置中心配置
         if (configCenter == null) {
             ConfigManager.getInstance().getConfigCenter().ifPresent(cc -> this.configCenter = cc);
         }
@@ -287,7 +288,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             if (!configCenter.checkOrUpdateInited()) {
                 return;
             }
-            DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
+            DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl()); // 连接配置中心 （Nacos，Apollo等配置中心）
             String configContent = dynamicConfiguration.getProperties(configCenter.getConfigFile(), configCenter.getGroup());
 
             String appGroup = application != null ? application.getName() : null;
@@ -300,8 +301,8 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             }
             try {
                 Environment.getInstance().setConfigCenterFirst(configCenter.isHighestPriority());
-                Environment.getInstance().updateExternalConfigurationMap(parseProperties(configContent));
-                Environment.getInstance().updateAppExternalConfigurationMap(parseProperties(appConfigContent));
+                Environment.getInstance().updateExternalConfigurationMap(parseProperties(configContent)); // 外部配置
+                Environment.getInstance().updateAppExternalConfigurationMap(parseProperties(appConfigContent)); // 外部App配置
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to parse configurations from Config Center.", e);
             }
@@ -595,7 +596,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         // for backward compatibility
         // -Ddubbo.registry.address is now deprecated.
         if (registries == null || registries.isEmpty()) {
-            String address = ConfigUtils.getProperty("dubbo.registry.address");
+            String address = ConfigUtils.getProperty("dubbo.registry.address"); // 环境变量或者dubbo.properties文件中获取注册中心地址
             if (address != null && address.length() > 0) {
                 List<RegistryConfig> tmpRegistries = new ArrayList<RegistryConfig>();
                 String[] as = D_REGISTRY_SPLIT_PATTERN.split(address);

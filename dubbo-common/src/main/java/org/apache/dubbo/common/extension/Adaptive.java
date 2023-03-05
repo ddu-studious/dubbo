@@ -33,6 +33,8 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
+// @Adaptive.value() 是当没有自适应或者指定名称时候，使用该值找到spi对应的类
+// @Adaptive.value() 没有值且在方法上时候，使用SPI接口的名称
 public @interface Adaptive {
     /**
      * Decide which target extension to be injected. The name of the target extension is decided by the parameter passed

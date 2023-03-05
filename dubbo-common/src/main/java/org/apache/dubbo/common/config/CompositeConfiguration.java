@@ -65,7 +65,7 @@ public class CompositeConfiguration implements Configuration {
         for (Configuration config : configList) {
             try {
                 if (config.containsKey(key)) {
-                    firstMatchingConfiguration = config;
+                    firstMatchingConfiguration = config; // 第一个匹配到的配置
                     break;
                 }
             } catch (Exception e) {

@@ -763,6 +763,7 @@ public final class StringUtils {
         return buf.toString();
     }
 
+    // 将方法转成小写且大写字母转小写后，前面都加一个.  例：getBeanName ==> get.bean.name
     public static String camelToSplitName(String camelName, String split) {
         if (isEmpty(camelName)) {
             return camelName;

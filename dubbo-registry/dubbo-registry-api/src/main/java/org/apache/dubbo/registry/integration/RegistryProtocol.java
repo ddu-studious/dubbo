@@ -181,10 +181,10 @@ public class RegistryProtocol implements Protocol {
         return overrideListeners;
     }
 
-    // TODO 提供方将接口注册到注册中心
+    // 提供方将接口注册到注册中心
     public void register(URL registryUrl, URL registeredProviderUrl) {
         Registry registry = registryFactory.getRegistry(registryUrl);
-        registry.register(registeredProviderUrl); // FailbackRegistry
+        registry.register(registeredProviderUrl); // FailbackRegistry  -- ZookeeperRegistry 父类
     }
 
     public void unregister(URL registryUrl, URL registeredProviderUrl) {
@@ -208,21 +208,21 @@ public class RegistryProtocol implements Protocol {
 
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
         //export invoker
-        final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
+        final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl); // 叠加ChannelHandler、叠加Filter、创建Netty服务器
 
         // url to registry
-        final Registry registry = getRegistry(originInvoker);
+        final Registry registry = getRegistry(originInvoker); // 连接ZK，监听、重连
         final URL registeredProviderUrl = getRegisteredProviderUrl(providerUrl, registryUrl);
         ProviderInvokerWrapper<T> providerInvokerWrapper = ProviderConsumerRegTable.registerProvider(originInvoker,
                 registryUrl, registeredProviderUrl);
         //to judge if we need to delay publish
         boolean register = registeredProviderUrl.getParameter("register", true);
-        if (register) { // TODO 判断是否要注册到注册中心
-            register(registryUrl, registeredProviderUrl);
-            providerInvokerWrapper.setReg(true);
+        if (register) { // 判断是否要注册到注册中心
+            register(registryUrl, registeredProviderUrl); // 将服务地址创建到ZK上 client.createPath()
+            providerInvokerWrapper.setReg(true); // 已注册
         }
 
-        // TODO 定于注册中心，来完成文件内容修改
+
         // Deprecated! Subscribe to override rules in 2.6.x or before.
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 

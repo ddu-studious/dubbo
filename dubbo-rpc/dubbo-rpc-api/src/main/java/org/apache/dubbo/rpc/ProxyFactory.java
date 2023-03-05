@@ -34,6 +34,8 @@ public interface ProxyFactory {
      * @param invoker
      * @return proxy
      */
+    // Extension.getExtensionLoader(ProxyFactory.class)
+    // .getExtension(URL.getParameter(@Adaptive.values()[0]:key, @SPI.value():默认))
     @Adaptive({PROXY_KEY})
     <T> T getProxy(Invoker<T> invoker) throws RpcException;
 

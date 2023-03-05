@@ -883,7 +883,7 @@ class URL implements Serializable {
         return ANYHOST_VALUE.equals(host) || getParameter(ANYHOST_KEY, false);
     }
 
-    public URL addParameterAndEncoded(String key, String value) {
+    public URL addParameterAndEncoded(String key, String value) { // 注册中心保存dubbo协议地址
         if (StringUtils.isEmpty(value)) {
             return this;
         }

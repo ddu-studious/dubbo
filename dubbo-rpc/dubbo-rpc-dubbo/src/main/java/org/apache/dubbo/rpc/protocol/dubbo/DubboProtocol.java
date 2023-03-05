@@ -115,7 +115,7 @@ public class DubboProtocol extends AbstractProtocol {
     private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() {
 
         @Override
-        public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException {
+        public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException { // 回复
             if (!(message instanceof Invocation)) {
                 throw new RemotingException(channel, "Unsupported request: "
                         + (message == null ? null : (message.getClass().getName() + ": " + message))
@@ -153,7 +153,7 @@ public class DubboProtocol extends AbstractProtocol {
         }
 
         @Override
-        public void received(Channel channel, Object message) throws RemotingException {
+        public void received(Channel channel, Object message) throws RemotingException { // 接收
             if (message instanceof Invocation) {
                 reply((ExchangeChannel) channel, message);
 
@@ -163,19 +163,19 @@ public class DubboProtocol extends AbstractProtocol {
         }
 
         @Override
-        public void connected(Channel channel) throws RemotingException {
+        public void connected(Channel channel) throws RemotingException { // 连接
             invoke(channel, ON_CONNECT_KEY);
         }
 
         @Override
-        public void disconnected(Channel channel) throws RemotingException {
+        public void disconnected(Channel channel) throws RemotingException { // 断开连接
             if (logger.isDebugEnabled()) {
                 logger.debug("disconnected from " + channel.getRemoteAddress() + ",url:" + channel.getUrl());
             }
             invoke(channel, ON_DISCONNECT_KEY);
         }
 
-        private void invoke(Channel channel, String methodKey) {
+        private void invoke(Channel channel, String methodKey) { // 调用
             Invocation invocation = createInvocation(channel, channel.getUrl(), methodKey);
             if (invocation != null) {
                 try {
@@ -186,7 +186,7 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
-        private Invocation createInvocation(Channel channel, URL url, String methodKey) {
+        private Invocation createInvocation(Channel channel, URL url, String methodKey) { // 创建invocation
             String method = url.getParameter(methodKey);
             if (method == null || method.length() == 0) {
                 return null;
@@ -302,7 +302,7 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
-        // TODO 打开服务端Netty Server
+        // 服务端Netty Server创建
         openServer(url);
         optimizeSerialization(url);
 

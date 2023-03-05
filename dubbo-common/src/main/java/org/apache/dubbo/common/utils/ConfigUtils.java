@@ -182,7 +182,7 @@ public class ConfigUtils {
         if (value != null && value.length() > 0) {
             return value;
         }
-        Properties properties = getProperties();
+        Properties properties = getProperties(); // 默认加载配置文件：dubbo.properties，可配置
         return replaceProperty(properties.getProperty(key, defaultValue), (Map) properties);
     }
 

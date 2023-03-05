@@ -90,11 +90,11 @@ public class ExtensionLoader<T> {
 
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
-    private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
+    private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>(); // <spiName, @Activate>
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
     private volatile Class<?> cachedAdaptiveClass = null;
-    private String cachedDefaultName;
+    private String cachedDefaultName; // @SPI.value()值的第一个
     private volatile Throwable createAdaptiveInstanceError;
 
     private Set<Class<?>> cachedWrapperClasses;
@@ -206,7 +206,7 @@ public class ExtensionLoader<T> {
      * @see org.apache.dubbo.common.extension.Activate
      */
     public List<T> getActivateExtension(URL url, String[] values, String group) {
-        List<T> exts = new ArrayList<>();
+        List<T> exts = new ArrayList<>(); // 用户未选择的所有符合要求的Filter
         List<String> names = values == null ? new ArrayList<>(0) : Arrays.asList(values);
         if (!names.contains(REMOVE_VALUE_PREFIX + DEFAULT_KEY)) {
             getExtensionClasses();
@@ -249,10 +249,10 @@ public class ExtensionLoader<T> {
                 }
             }
         }
-        if (!usrs.isEmpty()) {
+        if (!usrs.isEmpty()) { // 用户选择的Filter
             exts.addAll(usrs);
         }
-        return exts;
+        return exts; // 用户未选择的所有符合要求的Filter + 用户选择的Filter
     }
 
     private boolean isMatchGroup(String group, String[] groups) {
@@ -328,6 +328,8 @@ public class ExtensionLoader<T> {
     }
 
     /**
+     * 该方法获得SPI类的时候，会把所有，有以当前类为入参的Wrapper类包装一层。
+     * 例：ProxyFactory proxyFactory = new StubProxyFactoryWrapper(new JavassistProxyFactory())
      * Find the extension with the given name. If the specified name is not found, then {@link IllegalStateException}
      * will be thrown.
      */
@@ -729,7 +731,7 @@ public class ExtensionLoader<T> {
         } else {
             clazz.getConstructor();
             if (StringUtils.isEmpty(name)) {
-                name = findAnnotationName(clazz);
+                name = findAnnotationName(clazz); // SPI加载类名计算，当加载类名是以接口名相同，则去掉
                 if (name.length() == 0) {
                     throw new IllegalStateException("No such extension name for the class " + clazz.getName() + " in the config " + resourceURL);
                 }

@@ -51,6 +51,8 @@ import java.lang.annotation.Target;
  * instead of reporting which extract extension implementation fails and the extract reason.
  * </p>
  */
+// spi的作用之一：当没有自适应的类的时候，使用@SPI.value()的值来作为生成生成类的名字
+// spi的作用之二：@SPI.value()的值作为URL.getParameter(key, value, @SPI.value())的默认值
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
