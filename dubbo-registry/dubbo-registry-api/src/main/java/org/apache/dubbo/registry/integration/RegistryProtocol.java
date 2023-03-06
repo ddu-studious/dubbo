@@ -379,7 +379,7 @@ public class RegistryProtocol implements Protocol {
                 .setProtocol(url.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY))
                 .removeParameter(REGISTRY_KEY)
                 .build();
-        Registry registry = registryFactory.getRegistry(url); // TODO ExtensionLoader 流转   ZookeeperRegistry
+        Registry registry = registryFactory.getRegistry(url); // ExtensionLoader 流转   ZookeeperRegistry
         if (RegistryService.class.equals(type)) {
             return proxyFactory.getInvoker((T) registry, type, url);
         }
@@ -410,12 +410,12 @@ public class RegistryProtocol implements Protocol {
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url));
             registry.register(directory.getRegisteredConsumerUrl());
         }
-        directory.buildRouterChain(subscribeUrl); // TODO Router
+        directory.buildRouterChain(subscribeUrl); // 路由创建
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
 
         Invoker invoker = cluster.join(directory);
-        // TODO 客户端注册到注册中心
+        // 客户端注册到注册中心
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
         return invoker;
     }

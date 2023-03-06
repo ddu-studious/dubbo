@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
 /**
  * InvokerHandler
  */
-// TODO 接口调用
+// 接口调用
 public class InvokerInvocationHandler implements InvocationHandler {
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
     private final Invoker<?> invoker;
@@ -36,7 +36,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         this.invoker = handler;
     }
 
-    // TODO 接口调用第一步
+    // 接口调用第一步
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();

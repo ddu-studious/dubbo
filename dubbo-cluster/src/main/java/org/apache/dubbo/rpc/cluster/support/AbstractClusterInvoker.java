@@ -117,7 +117,6 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      * @return the invoker which will final to do invoke.
      * @throws RpcException exception
      */
-    // TODO 接口调用第七步
     protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
 
@@ -147,7 +146,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         }
         return invoker;
     }
-    // TODO 接口调用第八步
+
     private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
 
@@ -157,7 +156,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         if (invokers.size() == 1) {
             return invokers.get(0);
         }
-        Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation); // TODO 负载均衡使用
+        Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation); // 负载均衡使用
 
         //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
         if ((selected != null && selected.contains(invoker))
@@ -233,8 +232,6 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         return null;
     }
 
-    // TODO 客户端调用cluster
-    // TODO 接口调用第四步
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
         checkWhetherDestroyed();
@@ -245,8 +242,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
             ((RpcInvocation) invocation).addAttachments(contextAttachments);
         }
 
-        List<Invoker<T>> invokers = list(invocation);
-        LoadBalance loadbalance = initLoadBalance(invokers, invocation);// TODO 初始化负载均衡
+        List<Invoker<T>> invokers = list(invocation); // 路由
+        LoadBalance loadbalance = initLoadBalance(invokers, invocation);// 初始化负载均衡
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
         return doInvoke(invocation, invokers, loadbalance);
     }

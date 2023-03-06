@@ -72,7 +72,7 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
-        return getTransporter().connect(url, handler);
+        return getTransporter().connect(url, handler); // 创建客户端&连接服务端
     }
 
     public static Transporter getTransporter() {

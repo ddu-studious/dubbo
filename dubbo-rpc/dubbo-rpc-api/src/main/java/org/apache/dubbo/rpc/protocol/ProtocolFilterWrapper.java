@@ -74,7 +74,7 @@ public class ProtocolFilterWrapper implements Protocol {
                     public boolean isAvailable() {
                         return invoker.isAvailable();
                     }
-                    // TODO 接口调用第十一步、// TODO 接口调用第十三步、// TODO 接口调用第十四步
+
                     @Override
                     public Result invoke(Invocation invocation) throws RpcException {
                         Result asyncResult;
@@ -122,13 +122,13 @@ public class ProtocolFilterWrapper implements Protocol {
         return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
     }
 
-    // TODO 服务调用refer
+    // 服务调用refer
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
             return protocol.refer(type, url);
         }
-        return buildInvokerChain(protocol.refer(type, url), REFERENCE_FILTER_KEY, CommonConstants.CONSUMER);
+        return buildInvokerChain(protocol.refer(type, url), REFERENCE_FILTER_KEY, CommonConstants.CONSUMER); // 过滤器链
     }
 
     @Override
@@ -152,7 +152,7 @@ public class ProtocolFilterWrapper implements Protocol {
             this.filterInvoker = filterInvoker;
             this.filters = filters;
         }
-        // TODO 接口调用第十步
+
         @Override
         public Result invoke(Invocation invocation) throws RpcException {
             Result asyncResult = filterInvoker.invoke(invocation);

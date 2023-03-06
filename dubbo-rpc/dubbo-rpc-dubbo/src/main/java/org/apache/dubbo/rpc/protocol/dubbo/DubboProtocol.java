@@ -410,7 +410,7 @@ public class DubboProtocol extends AbstractProtocol {
         return invoker;
     }
 
-    private ExchangeClient[] getClients(URL url) {
+    private ExchangeClient[] getClients(URL url) { // 初始化客户端
         // whether to share connection
 
         boolean useShareConnect = false;

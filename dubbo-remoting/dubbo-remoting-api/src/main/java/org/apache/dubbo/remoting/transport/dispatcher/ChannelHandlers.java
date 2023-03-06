@@ -42,7 +42,7 @@ public class ChannelHandlers {
         INSTANCE = instance;
     }
 
-    // TODO 心跳检测
+    // 心跳检测
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) { // 内部包装：ChannelHandler集合
         return new MultiMessageHandler(new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class)
                 .getAdaptiveExtension().dispatch(handler, url)));

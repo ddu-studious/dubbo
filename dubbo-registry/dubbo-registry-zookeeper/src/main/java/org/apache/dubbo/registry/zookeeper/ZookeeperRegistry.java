@@ -70,7 +70,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     private final ZookeeperClient zkClient;
 
-    // TODO 连接zk
+    // 连接zk
     public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
         super(url);
         if (url.isAnyHost()) {
@@ -108,7 +108,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
-    // TODO Dubbo 在注册中心注册节点
+    // Dubbo 在注册中心注册节点
     @Override
     public void doRegister(URL url) {
         try {
