@@ -40,7 +40,7 @@ public class AdaptiveCompiler implements Compiler {
         if (name != null && name.length() > 0) {
             compiler = loader.getExtension(name);
         } else {
-            compiler = loader.getDefaultExtension();
+            compiler = loader.getDefaultExtension(); // 跟接口@SPI.value()第一个值有关系  Compiler 接口的@SPI.value() 是 javassist 及默认扩展是 JavassistCompiler
         }
         return compiler.compile(code, classLoader);
     }

@@ -82,7 +82,7 @@ public class ExtensionLoader<T> {
 
     // ==============================
 
-    private final Class<?> type;
+    private final Class<?> type; // 需要SPI的接口类
 
     private final ExtensionFactory objectFactory;
 
@@ -90,10 +90,13 @@ public class ExtensionLoader<T> {
 
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
+    /**
+     * 可激活的类缓存，每个SPI接口都有自己的可激活类缓存
+     */
     private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>(); // <spiName, @Activate>
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
-    private volatile Class<?> cachedAdaptiveClass = null;
+    private volatile Class<?> cachedAdaptiveClass = null; // 默认激活类   类存在 @Adaptive 注解
     private String cachedDefaultName; // @SPI.value()值的第一个
     private volatile Throwable createAdaptiveInstanceError;
 
@@ -216,6 +219,7 @@ public class ExtensionLoader<T> {
 
                 String[] activateGroup, activateValue;
 
+                // 正常 cachedActivates 中的Value值都必须是 @Activate
                 if (activate instanceof Activate) {
                     activateGroup = ((Activate) activate).group();
                     activateValue = ((Activate) activate).value();
@@ -225,21 +229,21 @@ public class ExtensionLoader<T> {
                 } else {
                     continue;
                 }
-                if (isMatchGroup(group, activateGroup)
-                        && !names.contains(name)
-                        && !names.contains(REMOVE_VALUE_PREFIX + name)
-                        && isActive(activateValue, url)) {
-                    exts.add(getExtension(name));
+                if (isMatchGroup(group, activateGroup) // @Activate 分组要匹配、或者为空
+                        && !names.contains(name) // 不在用户所选择的过滤器内
+                        && !names.contains(REMOVE_VALUE_PREFIX + name)  // 不是排除的过滤器
+                        && isActive(activateValue, url)) { //  @Activate.value 作为Key，在URL.parameter()中存在且value不为空
+                    exts.add(getExtension(name)); // 将符合的类加入exts集合中
                 }
             }
-            exts.sort(ActivateComparator.COMPARATOR);
+            exts.sort(ActivateComparator.COMPARATOR); // 排序
         }
         List<T> usrs = new ArrayList<>();
         for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
             if (!name.startsWith(REMOVE_VALUE_PREFIX)
-                    && !names.contains(REMOVE_VALUE_PREFIX + name)) {
-                if (DEFAULT_KEY.equals(name)) {
+                    && !names.contains(REMOVE_VALUE_PREFIX + name)) { // 排除移除的类
+                if (DEFAULT_KEY.equals(name)) { // 默认名称放到 exts 第一个位置
                     if (!usrs.isEmpty()) {
                         exts.addAll(0, usrs);
                         usrs.clear();
@@ -250,7 +254,7 @@ public class ExtensionLoader<T> {
             }
         }
         if (!usrs.isEmpty()) { // 用户选择的Filter
-            exts.addAll(usrs);
+            exts.addAll(usrs); // 用户自己选择的类，放入到exts集合的最后
         }
         return exts; // 用户未选择的所有符合要求的Filter + 用户选择的Filter
     }
@@ -356,6 +360,7 @@ public class ExtensionLoader<T> {
     }
 
     /**
+     * @SPI.value() 第一个
      * Return default extension, return <code>null</code> if it's not configured.
      */
     public T getDefaultExtension() {
@@ -724,14 +729,14 @@ public class ExtensionLoader<T> {
                     type + ", class line: " + clazz.getName() + "), class "
                     + clazz.getName() + " is not subtype of interface.");
         }
-        if (clazz.isAnnotationPresent(Adaptive.class)) {
-            cacheAdaptiveClass(clazz);
-        } else if (isWrapperClass(clazz)) {
-            cacheWrapperClass(clazz);
+        if (clazz.isAnnotationPresent(Adaptive.class)) { // 类存在 @Adaptive 注解
+            cacheAdaptiveClass(clazz); // 维护默认激活类
+        } else if (isWrapperClass(clazz)) { // 包装类
+            cacheWrapperClass(clazz); // 将包装类加入集合
         } else {
             clazz.getConstructor();
             if (StringUtils.isEmpty(name)) {
-                name = findAnnotationName(clazz); // SPI加载类名计算，当加载类名是以接口名相同，则去掉
+                name = findAnnotationName(clazz); // SPI加载类名计算，当加载类名是以接口名相同，则去掉接口名部分
                 if (name.length() == 0) {
                     throw new IllegalStateException("No such extension name for the class " + clazz.getName() + " in the config " + resourceURL);
                 }
@@ -739,10 +744,10 @@ public class ExtensionLoader<T> {
 
             String[] names = NAME_SEPARATOR.split(name);
             if (ArrayUtils.isNotEmpty(names)) {
-                cacheActivateClass(clazz, names[0]);
+                cacheActivateClass(clazz, names[0]); // 类存在类注解 @Adaptive，则加入Map cachedActivates
                 for (String n : names) {
-                    cacheName(clazz, n);
-                    saveInExtensionClass(extensionClasses, clazz, n);
+                    cacheName(clazz, n); // <class, name> Map
+                    saveInExtensionClass(extensionClasses, clazz, n); // <name, class> Map
                 }
             }
         }
@@ -848,6 +853,10 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 存在 @Adaptive 类或者创建一个Adaptive类，通过URL动态找到想要的扩展
+     * @return
+     */
     private Class<?> getAdaptiveExtensionClass() {
         getExtensionClasses();
         if (cachedAdaptiveClass != null) {
@@ -856,6 +865,10 @@ public class ExtensionLoader<T> {
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
+    /**
+     * 创建动态获取可扩展类，方法一定要存在 @Adaptive注解、URL入参或者间接URL变量
+     * @return
+     */
     private Class<?> createAdaptiveExtensionClass() {
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
         ClassLoader classLoader = findClassLoader();
