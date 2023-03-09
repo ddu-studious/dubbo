@@ -167,7 +167,7 @@ public abstract class AnnotationInjectedBeanPostProcessor extends
 
         ReflectionUtils.doWithFields(beanClass, field -> {
 
-            for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
+            for (Class<? extends Annotation> annotationType : getAnnotationTypes()) { // getAnnotationTypes() == @Reference
 
                 AnnotationAttributes attributes = getMergedAttributes(field, annotationType, getEnvironment(), true);
 

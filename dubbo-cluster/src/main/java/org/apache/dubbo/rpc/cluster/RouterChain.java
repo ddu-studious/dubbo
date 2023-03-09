@@ -46,7 +46,7 @@ public class RouterChain<T> {
         return new RouterChain<>(url);
     }
 
-    private RouterChain(URL url) {
+    private RouterChain(URL url) { // AppRouter/TagRouter
         List<RouterFactory> extensionFactories = ExtensionLoader.getExtensionLoader(RouterFactory.class)
                 .getActivateExtension(url, (String[]) null);
 

@@ -243,6 +243,12 @@ public class ReferenceAnnotationBeanPostProcessor extends AnnotationInjectedBean
 
         private final ReferenceBean referenceBean;
 
+        // JavassistProxyFactory.getProxy创建代理类 proxy0
+        // proxy0 有一个 InvokerInvocationHandler 的入参构造方法，InvokerInvocationHandler 中又包含生成的Invoker。
+        // 当前类被调用走代理逻辑的时候会走到 proxy0 对应的 Interface 的方法实现里面，
+        // proxy0里面对应的方法体又通过 InvokerInvocationHandler.invoke() 方法调用到 Invoker.invoke()
+        // 这样Dubbo Reference就走通了。
+        // Invoker 会经过过路由、负载均衡等
         private Object bean;
 
         private ReferenceBeanInvocationHandler(ReferenceBean referenceBean) {
