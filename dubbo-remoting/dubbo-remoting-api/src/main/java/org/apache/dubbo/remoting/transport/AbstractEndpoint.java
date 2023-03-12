@@ -45,7 +45,7 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
 
     public AbstractEndpoint(URL url, ChannelHandler handler) {
         super(url, handler);
-        this.codec = getChannelCodec(url);
+        this.codec = getChannelCodec(url); // 默认DubboCodec
         this.timeout = url.getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
         this.connectTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     }
@@ -53,7 +53,7 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
     protected static Codec2 getChannelCodec(URL url) {
         String codecName = url.getParameter(Constants.CODEC_KEY, "telnet");
         if (ExtensionLoader.getExtensionLoader(Codec2.class).hasExtension(codecName)) {
-            return ExtensionLoader.getExtensionLoader(Codec2.class).getExtension(codecName);
+            return ExtensionLoader.getExtensionLoader(Codec2.class).getExtension(codecName); // DubboCodec
         } else {
             return new CodecAdapter(ExtensionLoader.getExtensionLoader(Codec.class)
                     .getExtension(codecName));

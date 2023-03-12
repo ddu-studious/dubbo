@@ -287,7 +287,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     @Override
-    public void subscribe(URL url, NotifyListener listener) {
+    public void subscribe(URL url, NotifyListener listener) { // listener == RegistryDirectory
         super.subscribe(url, listener);
         removeFailedSubscribed(url, listener);
         try {
@@ -349,7 +349,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     @Override
-    protected void notify(URL url, NotifyListener listener, List<URL> urls) {
+    protected void notify(URL url, NotifyListener listener, List<URL> urls) { // 最终到 RegistryDirectory.notify(List<URL> urls)
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }

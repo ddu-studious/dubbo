@@ -155,7 +155,7 @@ public abstract class AbstractRegistry implements Registry {
         return lastCacheChanged;
     }
 
-    // TODO 将注册到注册中心的服务保存到文件中
+    // 将注册到注册中心的服务保存到文件中
     public void doSaveProperties(long version) {
         if (version < lastCacheChanged.get()) {
             return;
@@ -296,7 +296,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     @Override
-    public void subscribe(URL url, NotifyListener listener) {
+    public void subscribe(URL url, NotifyListener listener) { // listener == RegistryDirectory
         if (url == null) {
             throw new IllegalArgumentException("subscribe url == null");
         }
@@ -385,8 +385,8 @@ public abstract class AbstractRegistry implements Registry {
      * @param listener listener
      * @param urls     provider latest urls
      */
-    // TODO 保存文件
-    protected void notify(URL url, NotifyListener listener, List<URL> urls) {
+    // 保存文件
+    protected void notify(URL url, NotifyListener listener, List<URL> urls) { // listener == RegistryDirectory
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }
@@ -418,7 +418,7 @@ public abstract class AbstractRegistry implements Registry {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
             categoryNotified.put(category, categoryList);
-            listener.notify(categoryList);
+            listener.notify(categoryList); // 监听路由信息，拉取Providers存入RouterChain（路由器链）
             // We will update our cache file after each notification.
             // When our Registry has a subscribe failure due to network jitter, we can return at least the existing cache URL.
             saveProperties(url);

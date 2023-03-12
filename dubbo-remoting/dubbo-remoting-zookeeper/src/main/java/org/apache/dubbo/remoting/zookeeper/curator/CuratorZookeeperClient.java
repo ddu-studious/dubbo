@@ -202,7 +202,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
     }
 
     @Override
-    public CuratorZookeeperClient.CuratorWatcherImpl createTargetChildListener(String path, ChildListener listener) {
+    public CuratorZookeeperClient.CuratorWatcherImpl createTargetChildListener(String path, ChildListener listener) { // ZookeeperRegistry.this.notify
         return new CuratorZookeeperClient.CuratorWatcherImpl(client, listener);
     }
 

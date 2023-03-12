@@ -87,7 +87,7 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
     }
 
     @Override
-    public List<String> addChildListener(String path, final ChildListener listener) {
+    public List<String> addChildListener(String path, final ChildListener listener) { // ZookeeperRegistry.this.notify
         ConcurrentMap<ChildListener, TargetChildListener> listeners = childListeners.get(path);
         if (listeners == null) {
             childListeners.putIfAbsent(path, new ConcurrentHashMap<ChildListener, TargetChildListener>());
@@ -95,7 +95,7 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
         }
         TargetChildListener targetListener = listeners.get(listener);
         if (targetListener == null) {
-            listeners.putIfAbsent(listener, createTargetChildListener(path, listener));
+            listeners.putIfAbsent(listener, createTargetChildListener(path, listener)); // CuratorZookeeperClient.CuratorWatcherImpl
             targetListener = listeners.get(listener);
         }
         return addTargetChildListener(path, targetListener);
@@ -108,7 +108,7 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
 
     @Override
     public void addDataListener(String path, DataListener listener, Executor executor) {
-        ConcurrentMap<DataListener, TargetDataListener> dataListenerMap = listeners.get(path);
+        ConcurrentMap<DataListener, TargetDataListener> dataListenerMap = listeners.get(path); // CuratorZookeeperClient.CuratorWatcherImpl, CuratorZookeeperClient.CuratorWatcherImpl
         if (dataListenerMap == null) {
             listeners.putIfAbsent(path, new ConcurrentHashMap<DataListener, TargetDataListener>());
             dataListenerMap = listeners.get(path);
@@ -198,7 +198,7 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
 
     protected abstract boolean checkExists(String path);
 
-    protected abstract TargetChildListener createTargetChildListener(String path, ChildListener listener);
+    protected abstract TargetChildListener createTargetChildListener(String path, ChildListener listener); // ZookeeperRegistry.this.notify
 
     protected abstract List<String> addTargetChildListener(String path, TargetChildListener listener);
 

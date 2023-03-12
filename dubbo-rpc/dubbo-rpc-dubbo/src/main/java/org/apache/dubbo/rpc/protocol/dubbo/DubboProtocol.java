@@ -114,6 +114,7 @@ public class DubboProtocol extends AbstractProtocol {
 
     private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() {
 
+        // 回复
         @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException { // 回复
             if (!(message instanceof Invocation)) {

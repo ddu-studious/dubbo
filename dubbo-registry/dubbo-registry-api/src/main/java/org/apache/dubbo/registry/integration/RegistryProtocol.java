@@ -410,9 +410,9 @@ public class RegistryProtocol implements Protocol {
             directory.setRegisteredConsumerUrl(getRegisteredConsumerUrl(subscribeUrl, url)); // 设置注册ConsumerUrl
             registry.register(directory.getRegisteredConsumerUrl());
         }
-        directory.buildRouterChain(subscribeUrl); // 路由创建
+        directory.buildRouterChain(subscribeUrl); // 路由创建     路由是过滤的作用，负载是拿到一台实例调用
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
-                PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
+                PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY)); // 拉取订阅的服务，生成对应的服务端Invoker列表
 
         Invoker invoker = cluster.join(directory); // Cluster$Adaptive      MockClusterInvoker(FailoverClusterInvoker)    Cluster.getUrl() 都是通过抽象类 AbstractClusterInvoker.getUrl() 通过 RegistryDirectory.getUrl()
         // 客户端注册到注册中心

@@ -101,6 +101,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     private final URL directoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
     private final boolean multiGroup;
     private Protocol protocol; // Initialization at the time of injection, the assertion is not null
+    // registry == ZookeeperRegistry
     private Registry registry; // Initialization at the time of injection, the assertion is not null
     private volatile boolean forbidden = false;
 
@@ -161,7 +162,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         this.protocol = protocol;
     }
 
-    public void setRegistry(Registry registry) {
+    public void setRegistry(Registry registry) { // registry == ZookeeperRegistry
         this.registry = registry;
     }
 
@@ -169,7 +170,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         setConsumerUrl(url);
         CONSUMER_CONFIGURATION_LISTENER.addNotifyListener(this);
         serviceConfigurationListener = new ReferenceConfigurationListener(this, url);
-        registry.subscribe(url, this);
+        // 订阅同步路由信息，获取Providers。全部都由RegistryDirectory.notify(List<URL> urls) 来获取配置信息、路由信息、Providers信息
+        registry.subscribe(url, this); // this == RegistryDirectory // registry == ZookeeperRegistry
     }
 
 
@@ -226,17 +228,17 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         this.configurators = Configurator.toConfigurators(configuratorURLs).orElse(this.configurators);
 
         List<URL> routerURLs = categoryUrls.getOrDefault(ROUTERS_CATEGORY, Collections.emptyList());
-        toRouters(routerURLs).ifPresent(this::addRouters);
+        toRouters(routerURLs).ifPresent(this::addRouters); // 添加路由信息
 
         // providers
         List<URL> providerURLs = categoryUrls.getOrDefault(PROVIDERS_CATEGORY, Collections.emptyList());
-        refreshOverrideAndInvoker(providerURLs);
+        refreshOverrideAndInvoker(providerURLs); // providers 获取，且存入RouterChain。RouterChain中含有所有路由集合
     }
 
     private void refreshOverrideAndInvoker(List<URL> urls) {
         // mock zookeeper://xxx?mock=return null
         overrideDirectoryUrl();
-        refreshInvoker(urls);
+        refreshInvoker(urls); // 刷新远程Exporter
     }
 
     /**

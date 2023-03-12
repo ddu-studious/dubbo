@@ -28,11 +28,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * TODO invokers赋值的时机
+ * invokers赋值的时机
  * Router chain
  */
 public class RouterChain<T> {
 
+    // setInvokers
+    // RegistryDirectory.refreshInvoker
     // full list of addresses from registry, classified by method name.
     private List<Invoker<T>> invokers = Collections.emptyList();
 
@@ -106,6 +108,7 @@ public class RouterChain<T> {
      * Notify router chain of the initial addresses from registry at the first time.
      * Notify whenever addresses in registry change.
      */
+    // RegistryDirectory.refreshInvoker     在客服端启动的时候，订阅了Provider且拉到所有Exporter的Invoker集合
     public void setInvokers(List<Invoker<T>> invokers) {
         this.invokers = (invokers == null ? Collections.emptyList() : invokers);
         routers.forEach(router -> router.notify(this.invokers));

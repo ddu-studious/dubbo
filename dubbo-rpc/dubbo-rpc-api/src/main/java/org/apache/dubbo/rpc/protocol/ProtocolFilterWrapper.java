@@ -126,7 +126,7 @@ public class ProtocolFilterWrapper implements Protocol {
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
-            return protocol.refer(type, url);
+            return protocol.refer(type, url); // protocol == RegistryProtocol
         }
         return buildInvokerChain(protocol.refer(type, url), REFERENCE_FILTER_KEY, CommonConstants.CONSUMER); // 过滤器链
     }

@@ -376,7 +376,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 // if protocols not injvm checkRegistry
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())){ // 非本地协议
                     checkRegistry();
-                    List<URL> us = loadRegistries(false);
+                    List<URL> us = loadRegistries(false); // registry 协议URL
                     if (CollectionUtils.isNotEmpty(us)) {
                         for (URL u : us) {
                             URL monitorUrl = loadMonitor(u);

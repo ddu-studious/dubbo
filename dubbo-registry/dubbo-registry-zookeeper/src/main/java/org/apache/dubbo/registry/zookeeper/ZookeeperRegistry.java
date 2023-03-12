@@ -81,7 +81,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             group = PATH_SEPARATOR + group;
         }
         this.root = group;
-        zkClient = zookeeperTransporter.connect(url); // ZookeeperTransporter$Adaptive
+        zkClient = zookeeperTransporter.connect(url); // ZookeeperTransporter$Adaptive  ==> CuratorZookeeperClient
         zkClient.addStateListener(state -> {
             if (state == StateListener.RECONNECTED) {
                 try {
@@ -128,7 +128,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     @Override
-    public void doSubscribe(final URL url, final NotifyListener listener) {
+    public void doSubscribe(final URL url, final NotifyListener listener) { // listener == RegistryDirectory
         try {
             if (ANY_VALUE.equals(url.getServiceInterface())) {
                 String root = toRootPath();
@@ -163,7 +163,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 }
             } else {
                 List<URL> urls = new ArrayList<>();
-                for (String path : toCategoriesPath(url)) {
+                for (String path : toCategoriesPath(url)) { // category、providers、consumers、routers
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                     if (listeners == null) {
                         zkListeners.putIfAbsent(url, new ConcurrentHashMap<>());
@@ -175,7 +175,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
                         zkListener = listeners.get(listener);
                     }
                     zkClient.create(path, false);
-                    List<String> children = zkClient.addChildListener(path, zkListener);
+                    // zkListener == ChildListener
+                    List<String> children = zkClient.addChildListener(path, zkListener); // 获取子路径  ZookeeperRegistry.this.notify()
                     if (children != null) {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
                     }
