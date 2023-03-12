@@ -36,6 +36,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.apache.dubbo.common.constants.CommonConstants.MAX_PROXY_COUNT;
 
 /**
+ * https://www.cnblogs.com/rickiyang/p/11336268.html
+ * http://www.javassist.org/tutorial/tutorial2.html   有很多标识符可以使用，有不同含义。$0 this，$1 入参第一个参数
  * Proxy.
  */
 
@@ -190,7 +192,7 @@ public abstract class Proxy {
             ccp.setClassName(pcn);
             ccp.addField("public static java.lang.reflect.Method[] methods;");
             ccp.addField("private " + InvocationHandler.class.getName() + " handler;");
-            ccp.addConstructor(Modifier.PUBLIC, new Class<?>[]{InvocationHandler.class}, new Class<?>[0], "handler=$1;");
+            ccp.addConstructor(Modifier.PUBLIC, new Class<?>[]{InvocationHandler.class}, new Class<?>[0], "handler=$1;"); // 增加 InvocationHandler 入参的构造方法
             ccp.addDefaultConstructor();
             Class<?> clazz = ccp.toClass();
             clazz.getField("methods").set(null, methods.toArray(new Method[0]));
@@ -201,7 +203,7 @@ public abstract class Proxy {
             ccm.setClassName(fcn);
             ccm.addDefaultConstructor();
             ccm.setSuperClass(Proxy.class);
-            ccm.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " h){ return new " + pcn + "($1); }");
+            ccm.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " h){ return new " + pcn + "($1); }"); // 增加
             Class<?> pc = ccm.toClass();
             proxy = (Proxy) pc.newInstance();
         } catch (RuntimeException e) {

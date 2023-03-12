@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+ * TODO invokers赋值的时机
  * Router chain
  */
 public class RouterChain<T> {
@@ -95,7 +96,7 @@ public class RouterChain<T> {
      */
     public List<Invoker<T>> route(URL url, Invocation invocation) { // Router
         List<Invoker<T>> finalInvokers = invokers;
-        for (Router router : routers) {
+        for (Router router : routers) { // MockInvokersSelector、TagRouter、AppRouter、ServiceRouter
             finalInvokers = router.route(finalInvokers, url, invocation);
         }
         return finalInvokers;

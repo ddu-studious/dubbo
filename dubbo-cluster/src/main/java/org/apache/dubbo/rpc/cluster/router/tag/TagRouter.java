@@ -172,7 +172,7 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
                 result = filterInvoker(invokers, invoker -> StringUtils.isEmpty(invoker.getUrl().getParameter(TAG_KEY)));
             }
         } else {
-            result = filterInvoker(invokers, invoker -> StringUtils.isEmpty(invoker.getUrl().getParameter(TAG_KEY)));
+            result = filterInvoker(invokers, invoker -> StringUtils.isEmpty(invoker.getUrl().getParameter(TAG_KEY))); // 找到所有dubbo.tag为空的实例
         }
         return result;
     }

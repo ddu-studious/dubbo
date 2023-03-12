@@ -81,7 +81,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             group = PATH_SEPARATOR + group;
         }
         this.root = group;
-        zkClient = zookeeperTransporter.connect(url);
+        zkClient = zookeeperTransporter.connect(url); // ZookeeperTransporter$Adaptive
         zkClient.addStateListener(state -> {
             if (state == StateListener.RECONNECTED) {
                 try {

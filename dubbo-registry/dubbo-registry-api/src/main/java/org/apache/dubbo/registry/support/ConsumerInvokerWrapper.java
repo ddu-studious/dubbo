@@ -35,9 +35,9 @@ public class ConsumerInvokerWrapper<T> implements Invoker {
 
     public ConsumerInvokerWrapper(Invoker<T> invoker, URL registryUrl, URL consumerUrl, RegistryDirectory registryDirectory) {
         this.invoker = invoker;
-        this.originUrl = URL.valueOf(invoker.getUrl().toFullString());
-        this.registryUrl = URL.valueOf(registryUrl.toFullString());
-        this.consumerUrl = consumerUrl;
+        this.originUrl = URL.valueOf(invoker.getUrl().toFullString()); // zookeeper 协议URL  ==>   invoker == MockCluster.getUrl() == RegistryDirectory.getUrl()
+        this.registryUrl = URL.valueOf(registryUrl.toFullString()); // zookeeper 协议URL
+        this.consumerUrl = consumerUrl; // Consumer 协议URL
         this.registryDirectory = registryDirectory;
     }
 

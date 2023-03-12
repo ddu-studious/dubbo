@@ -38,13 +38,15 @@ import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_RETRIES;
 import static org.apache.dubbo.rpc.cluster.Constants.RETRIES_KEY;
 
 /**
+ * 包含路由（RegistryDirectory提供，RouterChain.routers()处理）、负载均衡
+ *
+ *
  * When invoke fails, log the initial error and retry other invokers (retry n times, which means at most n different invokers will be invoked)
  * Note that retry causes latency.
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Failover">Failover</a>
  *
  */
-// TODO
 public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(FailoverClusterInvoker.class);
@@ -76,7 +78,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 // check again
                 checkInvokers(copyInvokers, invocation);
             }
-            Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
+            Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked); // 负载一个实例
             invoked.add(invoker);
             RpcContext.getContext().setInvokers((List) invoked);
             try {

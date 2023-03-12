@@ -131,7 +131,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AnnotationInjectedBean
 
         cacheInjectedReferenceBean(referenceBean, injectedElement);
 
-        return buildProxy(referencedBeanName, referenceBean, injectedType);
+        return buildProxy(referencedBeanName, referenceBean, injectedType); // 创建type的代理对象
     }
 
     /**
@@ -216,6 +216,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AnnotationInjectedBean
     }
 
     private Object buildProxy(String referencedBeanName, ReferenceBean referenceBean, Class<?> injectedType) {
+        // 构建 ReferenceBeanInvocationHandler，且执行ReferenceBeanInvocationHandler.handler() ==> ReferenceBean.get() 执行初始化逻辑
         InvocationHandler handler = buildInvocationHandler(referencedBeanName, referenceBean);
         return Proxy.newProxyInstance(getClassLoader(), new Class[]{injectedType}, handler);
     }
@@ -263,7 +264,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AnnotationInjectedBean
                     // issue: https://github.com/apache/dubbo/issues/3429
                     init();
                 }
-                result = method.invoke(bean, args);
+                result = method.invoke(bean, args); // bean 是实现的type的类，代理类Proxy0
             } catch (InvocationTargetException e) {
                 // re-throws the actual Exception.
                 throw e.getTargetException();

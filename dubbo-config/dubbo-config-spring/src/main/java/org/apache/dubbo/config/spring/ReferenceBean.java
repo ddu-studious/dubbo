@@ -46,6 +46,11 @@ import java.util.Map;
 import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATTERN;
 
 /**
+ * ReferenceBean 的代理执行过程就是
+ * ReferenceBeanInvocationHandler.invoke( Proxy0, method, args ); 
+ *      InvokerInvocationHandler.invoke(invoker, new RpcInvocation(method, args));
+ *
+ *
  * ReferenceFactoryBean
  */
 public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean, ApplicationContextAware, InitializingBean, DisposableBean {

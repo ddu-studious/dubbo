@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 
 /**
+ * https://www.cnblogs.com/rickiyang/p/11336268.html
+ * http://www.javassist.org/tutorial/tutorial2.html    有很多标识符可以使用，有不同含义。$0 this，$1 入参第一个参数
  * Wrapper.
  */
 public abstract class Wrapper {

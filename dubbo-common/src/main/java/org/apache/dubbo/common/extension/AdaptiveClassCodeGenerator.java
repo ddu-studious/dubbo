@@ -67,7 +67,7 @@ public class AdaptiveClassCodeGenerator {
 
     private final Class<?> type;
 
-    private String defaultExtName;
+    private String defaultExtName; // @SPI.value()值的第一个
 
     public AdaptiveClassCodeGenerator(Class<?> type, String defaultExtName) {
         this.type = type;
@@ -214,6 +214,7 @@ public class AdaptiveClassCodeGenerator {
                 code.append(generateUrlAssignmentIndirectly(method));
             }
 
+            // value = @Adaptive.value() / type.getSimpleName() 以Protocol为例：  export方法Adaptive.value() == null 则返回 protocol 字符串
             String[] value = getMethodAdaptiveValue(adaptiveAnnotation);
 
             // 入参是否有 ：org.apache.dubbo.rpc.Invocation 变量
@@ -256,7 +257,7 @@ public class AdaptiveClassCodeGenerator {
         // TODO: refactor it
         String getNameCode = null;
         for (int i = value.length - 1; i >= 0; --i) { // value : {"proxy"}
-            if (i == value.length - 1) { // 最后一个
+            if (i == value.length - 1) { // 最后一个才会使用 defaultExtName，其他都是使用 getNameCode 迭代
                 if (null != defaultExtName) { // @SPI.value()的第一个值  ： javassist
                     if (!"protocol".equals(value[i])) { // @Adaptive.value() != "protocol"
                         if (hasInvocation) { // 方法有 org.apache.dubbo.rpc.Invocation 入参
@@ -271,7 +272,8 @@ public class AdaptiveClassCodeGenerator {
                             // defaultExtName = "javassist"
                         }
                     } else { // @Adaptive.value() == "protocol"
-                            // 如果 url.getProtocol() == null，在使用 defaultExtName="javassist"，否则url.getProtocol()
+                        // 如果 url.getProtocol() == null，在使用 defaultExtName="javassist"，否则url.getProtocol()
+                        // Protocol/RegistryFactory 特殊逻辑，返回的extName = url.getProtocol()
                         getNameCode = String.format("( url.getProtocol() == null ? \"%s\" : url.getProtocol() )", defaultExtName);
                     }
                 } else { // @SPI.value() == null

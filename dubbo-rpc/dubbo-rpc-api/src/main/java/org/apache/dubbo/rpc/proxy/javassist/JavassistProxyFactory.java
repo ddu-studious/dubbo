@@ -34,7 +34,11 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
+        // Proxy.getProxy(interfaces) 主要是将接口实现，接口实现都是通过 InvokerInvocationHandler.invoke(this, method, args)
         return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
+        // Proxy0.invoke == InvokerInvocationHandler.invoke()
+        // InvokerInvocationHandler.invoke() == > 执行 MockClusterInvoker(FailoverClusterInvoker)
+        // InvokerInvocationHandler 封装的 new RpcInvocation(method, args)，继续往后续Invoker传递
     }
 
     // 服务端

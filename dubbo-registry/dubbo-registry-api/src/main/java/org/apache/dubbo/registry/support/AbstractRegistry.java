@@ -88,7 +88,7 @@ public abstract class AbstractRegistry implements Registry {
     // Local disk cache file
     private File file;
 
-    // TODO 缓存注册中心服务端提供方接口到文件
+    // 缓存注册中心服务端提供方接口到文件
     public AbstractRegistry(URL url) {
         setUrl(url);
         // Start file save timer

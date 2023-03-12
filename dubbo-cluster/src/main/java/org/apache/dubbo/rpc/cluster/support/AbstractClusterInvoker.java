@@ -239,11 +239,11 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         // binding attachments into invocation.
         Map<String, String> contextAttachments = RpcContext.getContext().getAttachments();
         if (contextAttachments != null && contextAttachments.size() != 0) {
-            ((RpcInvocation) invocation).addAttachments(contextAttachments);
+            ((RpcInvocation) invocation).addAttachments(contextAttachments); // 请求的额外附件
         }
 
-        List<Invoker<T>> invokers = list(invocation); // 路由
-        LoadBalance loadbalance = initLoadBalance(invokers, invocation);// 初始化负载均衡
+        List<Invoker<T>> invokers = list(invocation); // 路由，路由是通过 FailoverClusterInvoker中处理的，是通过 RegistryDirectory.list() 来获取路由列表。
+        LoadBalance loadbalance = initLoadBalance(invokers, invocation);// 负载均衡
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
         return doInvoke(invocation, invokers, loadbalance);
     }
@@ -294,7 +294,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
     protected LoadBalance initLoadBalance(List<Invoker<T>> invokers, Invocation invocation) {
         if (CollectionUtils.isNotEmpty(invokers)) {
             return ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(invokers.get(0).getUrl()
-                    .getMethodParameter(RpcUtils.getMethodName(invocation), LOADBALANCE_KEY, DEFAULT_LOADBALANCE));
+                    .getMethodParameter(RpcUtils.getMethodName(invocation), LOADBALANCE_KEY, DEFAULT_LOADBALANCE)); // RandomLoadBalance
         } else {
             return ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(DEFAULT_LOADBALANCE);
         }
