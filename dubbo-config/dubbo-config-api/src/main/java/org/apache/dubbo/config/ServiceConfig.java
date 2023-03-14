@@ -368,13 +368,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     public synchronized void export() {
-        checkAndUpdateSubConfigs();
+        checkAndUpdateSubConfigs(); // 检查且更新子配置
 
         if (!shouldExport()) {
             return;
         }
 
-        if (shouldDelay()) {
+        if (shouldDelay()) { // 延迟发布，通过定时器延迟发布
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
             doExport();
@@ -414,7 +414,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (StringUtils.isEmpty(path)) {
             path = interfaceName;
         }
-        doExportUrls();
+        doExportUrls(); // 发布Exporter
     }
 
     private void checkRef() {
@@ -451,7 +451,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
-        List<URL> registryURLs = loadRegistries(true); // 加载注册中心
+        List<URL> registryURLs = loadRegistries(true); // 加载注册中心配置
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);
             ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);
@@ -574,7 +574,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
 
             // export to local if the config is not remote (export to remote only when config is remote)
-            if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) { // TODO 本地export
+            if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) { // 本地export
                 exportLocal(url);
             }
             // export to remote if the config is not local (export to local only when config is local)
@@ -603,10 +603,15 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
 
-                        Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
-                        DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
+                        // ref == 接口实现类
+                        // JavassistProxyFactory.getInvoker() == new AbstractProxyInvoker<T>(proxy, type, url)
+                        // 通过 Wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments) 来找到方法调用
+                        Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString())); // registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString())   将发布URL编码后放入RegistryURL中
+                        DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this); // 委托
 
-                        Exporter<?> exporter = protocol.export(wrapperInvoker); // 创建远程调用服务端
+                        // 以上代码产生的Invoker： new DelegateProviderMetaDataInvoker( new AbstractProxyInvoker() )
+
+                        Exporter<?> exporter = protocol.export(wrapperInvoker); // wrapperInvoker.getUrl() 是Registry协议。创建远程调用服务端 // wrapperInvoker = new DelegateProviderMetaDataInvoker( new AbstractProxyInvoker() )
                         exporters.add(exporter);
                     }
                 } else {

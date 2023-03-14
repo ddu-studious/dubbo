@@ -112,7 +112,7 @@ public class DubboProtocol extends AbstractProtocol {
      */
     private final ConcurrentMap<String, String> stubServiceMethodsMap = new ConcurrentHashMap<>();
 
-    private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() {
+    private ExchangeHandler requestHandler = new ExchangeHandlerAdapter() { // 仅支持处理Request
 
         // 回复
         @Override
@@ -304,7 +304,7 @@ public class DubboProtocol extends AbstractProtocol {
         }
 
         // 服务端Netty Server创建
-        openServer(url);
+        openServer(url); // Netty 在处理Handler的时候会获取Exporter使用
         optimizeSerialization(url);
 
         return exporter;
@@ -339,7 +339,7 @@ public class DubboProtocol extends AbstractProtocol {
                 .addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT))
                 .addParameter(CODEC_KEY, DubboCodec.NAME)
                 .build();
-        String str = url.getParameter(SERVER_KEY, DEFAULT_REMOTING_SERVER);
+        String str = url.getParameter(SERVER_KEY, DEFAULT_REMOTING_SERVER); // 默认netty
 
         if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
             throw new RpcException("Unsupported server type: " + str + ", url: " + url);
@@ -347,7 +347,7 @@ public class DubboProtocol extends AbstractProtocol {
 
         ExchangeServer server;
         try {
-            server = Exchangers.bind(url, requestHandler);
+            server = Exchangers.bind(url, requestHandler); // Netty创建，通信
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
         }

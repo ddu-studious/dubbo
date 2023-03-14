@@ -586,12 +586,12 @@ class URL implements Serializable {
         if (n != null) {
             return n.intValue();
         }
-        String value = getParameter(key);
+        String value = getParameter(key); // default.{key} / {key} 存在则返回，不存在则使用默认值
         if (StringUtils.isEmpty(value)) {
             return defaultValue;
         }
         int i = Integer.parseInt(value);
-        getNumbers().put(key, i);
+        getNumbers().put(key, i); // 将数值存入Number集合
         return i;
     }
 

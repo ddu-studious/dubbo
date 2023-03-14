@@ -110,7 +110,7 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
         Set<String> resolvedPackagesToScan = resolvePackagesToScan(packagesToScan);
 
         if (!CollectionUtils.isEmpty(resolvedPackagesToScan)) {
-            registerServiceBeans(resolvedPackagesToScan, registry);
+            registerServiceBeans(resolvedPackagesToScan, registry); // ServiceBean 查找且封装成ServiceBean存入单例池中
         } else {
             if (logger.isWarnEnabled()) {
                 logger.warn("packagesToScan is empty , ServiceBean registry will be ignored!");
@@ -274,14 +274,17 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
 
         String annotatedServiceBeanName = beanDefinitionHolder.getBeanName();
 
+        // 构建ServiceBean实例
+        // 向ServiceBean BeanDefinition中增加一些属性，BeanDefinitionBuilder.addPropertyReference(propertyName, resolvedBeanName) 添加对象、BeanDefinitionBuilder.builder.addPropertyValue 添加一般属性
         AbstractBeanDefinition serviceBeanDefinition =
                 buildServiceBeanDefinition(service, serviceAnnotationAttributes, interfaceClass, annotatedServiceBeanName);
 
         // ServiceBean Bean name
+        // ServiceBean:type:...
         String beanName = generateServiceBeanName(serviceAnnotationAttributes, interfaceClass);
 
-        if (scanner.checkCandidate(beanName, serviceBeanDefinition)) { // check duplicated candidate bean
-            registry.registerBeanDefinition(beanName, serviceBeanDefinition);
+        if (scanner.checkCandidate(beanName, serviceBeanDefinition)) { // check duplicated candidate bean  // 检查重复的候选bean
+            registry.registerBeanDefinition(beanName, serviceBeanDefinition); // 注册到容器中
 
             if (logger.isInfoEnabled()) {
                 logger.info("The BeanDefinition[" + serviceBeanDefinition +

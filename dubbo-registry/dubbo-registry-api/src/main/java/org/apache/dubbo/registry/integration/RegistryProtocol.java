@@ -193,17 +193,17 @@ public class RegistryProtocol implements Protocol {
     }
 
     @Override
-    public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
-        URL registryUrl = getRegistryUrl(originInvoker);
+    public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException { // originInvoker == new DelegateProviderMetaDataInvoker( new AbstractProxyInvoker() )
+        URL registryUrl = getRegistryUrl(originInvoker); // zookeeper协议
         // url to export locally
-        URL providerUrl = getProviderUrl(originInvoker);
+        URL providerUrl = getProviderUrl(originInvoker); // Dubbo协议
 
         // Subscribe the override data
         // FIXME When the provider subscribes, it will affect the scene : a certain JVM exposes the service and call
         //  the same service. Because the subscribed is cached key with the name of the service, it causes the
         //  subscription information to cover.
-        final URL overrideSubscribeUrl = getSubscribedOverrideUrl(providerUrl);
-        final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
+        final URL overrideSubscribeUrl = getSubscribedOverrideUrl(providerUrl); // provider协议
+        final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker); // 覆盖原Invoker监听器
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
 
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
@@ -224,7 +224,8 @@ public class RegistryProtocol implements Protocol {
 
 
         // Deprecated! Subscribe to override rules in 2.6.x or before.
-        registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
+        // overrideSubscribeListener = OverrideListener
+        registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener); // registry == ZooKeeperRegistry
 
         exporter.setRegisterUrl(registeredProviderUrl);
         exporter.setSubscribeUrl(overrideSubscribeUrl);
@@ -251,7 +252,7 @@ public class RegistryProtocol implements Protocol {
 
     public <T> void reExport(final Invoker<T> originInvoker, URL newInvokerUrl) {
         // update local exporter
-        ExporterChangeableWrapper exporter = doChangeLocalExport(originInvoker, newInvokerUrl);
+        ExporterChangeableWrapper exporter = doChangeLocalExport(originInvoker, newInvokerUrl); // 重新发布invoker
         // update registry
         URL registryUrl = getRegistryUrl(originInvoker);
         final URL registeredProviderUrl = getRegisteredProviderUrl(newInvokerUrl, registryUrl);
@@ -262,7 +263,7 @@ public class RegistryProtocol implements Protocol {
         /**
          * Only if the new url going to Registry is different with the previous one should we do unregister and register.
          */
-        if (providerInvokerWrapper.isReg() && !registeredProviderUrl.equals(providerInvokerWrapper.getProviderUrl())) {
+        if (providerInvokerWrapper.isReg() && !registeredProviderUrl.equals(providerInvokerWrapper.getProviderUrl())) { // 重新注册
             unregister(registryUrl, providerInvokerWrapper.getProviderUrl());
             register(registryUrl, registeredProviderUrl);
             newProviderInvokerWrapper.setReg(true);
@@ -304,8 +305,8 @@ public class RegistryProtocol implements Protocol {
     private URL getRegistryUrl(Invoker<?> originInvoker) {
         URL registryUrl = originInvoker.getUrl();
         if (REGISTRY_PROTOCOL.equals(registryUrl.getProtocol())) {
-            String protocol = registryUrl.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY);
-            registryUrl = registryUrl.setProtocol(protocol).removeParameter(REGISTRY_KEY);
+            String protocol = registryUrl.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY); // zookeeper
+            registryUrl = registryUrl.setProtocol(protocol).removeParameter(REGISTRY_KEY); // 将registryUrl改成zookeeper协议，删掉paramters中协议属性
         }
         return registryUrl;
     }
@@ -509,14 +510,14 @@ public class RegistryProtocol implements Protocol {
      */
     private class OverrideListener implements NotifyListener {
         private final URL subscribeUrl;
-        private final Invoker originInvoker;
+        private final Invoker originInvoker; // originInvoker == new DelegateProviderMetaDataInvoker( new AbstractProxyInvoker() )
 
 
         private List<Configurator> configurators;
 
         public OverrideListener(URL subscribeUrl, Invoker originalInvoker) {
             this.subscribeUrl = subscribeUrl;
-            this.originInvoker = originalInvoker;
+            this.originInvoker = originalInvoker; // originInvoker == new DelegateProviderMetaDataInvoker( new AbstractProxyInvoker() )
         }
 
         /**
@@ -524,7 +525,7 @@ public class RegistryProtocol implements Protocol {
          *             return value of {@link org.apache.dubbo.registry.RegistryService#lookup(URL)}.
          */
         @Override
-        public synchronized void notify(List<URL> urls) {
+        public synchronized void notify(List<URL> urls) { // Provider使用，在发布Exporter的时候，动态变更配置
             logger.debug("original override urls: " + urls);
 
             List<URL> matchedUrls = getMatchedUrls(urls, subscribeUrl.addParameter(CATEGORY_KEY,

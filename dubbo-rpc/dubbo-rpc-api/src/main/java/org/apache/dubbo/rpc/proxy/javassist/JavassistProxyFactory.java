@@ -43,8 +43,9 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
 
     // 服务端
     @Override
-    public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
+    public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) { // type proxy的接口， proxy type的实现实例
         // TODO Wrapper cannot handle this scenario correctly: the classname contains '$'
+        // 接口实现类名中不含有$，则使用实现类，否则使用接口
         final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
         return new AbstractProxyInvoker<T>(proxy, type, url) {
             @Override

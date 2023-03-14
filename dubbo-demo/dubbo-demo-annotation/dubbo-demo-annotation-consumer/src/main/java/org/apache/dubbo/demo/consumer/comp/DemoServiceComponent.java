@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 
 @Component("demoServiceComponent")
 public class DemoServiceComponent implements DemoService {
-    @Reference(timeout = 1000 * 10)
+    @Reference(timeout = 1000 * 60 * 5)
     private DemoService demoService;
 
     @Override

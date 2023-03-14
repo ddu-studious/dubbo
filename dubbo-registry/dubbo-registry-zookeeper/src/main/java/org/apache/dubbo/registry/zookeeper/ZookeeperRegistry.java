@@ -85,7 +85,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         zkClient.addStateListener(state -> {
             if (state == StateListener.RECONNECTED) {
                 try {
-                    recover();
+                    recover(); // 恢复
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
@@ -176,7 +176,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     }
                     zkClient.create(path, false);
                     // zkListener == ChildListener
-                    List<String> children = zkClient.addChildListener(path, zkListener); // 获取子路径  ZookeeperRegistry.this.notify()
+                    List<String> children = zkClient.addChildListener(path, zkListener); // 获取子路径  ZookeeperRegistry.this.notify() // client.getChildren().usingWatcher(listener).forPath(path)
                     if (children != null) {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
                     }

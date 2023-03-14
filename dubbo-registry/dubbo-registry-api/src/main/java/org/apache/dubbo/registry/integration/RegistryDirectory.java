@@ -208,7 +208,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     }
 
     @Override
-    public synchronized void notify(List<URL> urls) {
+    public synchronized void notify(List<URL> urls) { // Consumer使用，在启动客户端的时候
         Map<String, List<URL>> categoryUrls = urls.stream()
                 .filter(Objects::nonNull)
                 .filter(this::isValidCategory)
@@ -422,7 +422,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                         enabled = url.getParameter(ENABLED_KEY, true);
                     }
                     if (enabled) {
-                        invoker = new InvokerDelegate<>(protocol.refer(serviceType, url), url, providerUrl);
+                        invoker = new InvokerDelegate<>(protocol.refer(serviceType, url), url, providerUrl); // 客户端拉取远端服务端信息，invoker叠加
                     }
                 } catch (Throwable t) {
                     logger.error("Failed to refer invoker for interface:" + serviceType + ",url:(" + url + ")" + t.getMessage(), t);
