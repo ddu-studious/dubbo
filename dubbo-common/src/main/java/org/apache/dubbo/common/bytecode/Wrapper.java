@@ -16,6 +16,10 @@
  */
 package org.apache.dubbo.common.bytecode;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import javassist.ClassPool;
+import javassist.CtMethod;
 import org.apache.dubbo.common.utils.ClassUtils;
 import org.apache.dubbo.common.utils.ReflectUtils;
 
@@ -33,8 +37,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 
 /**
- * https://www.cnblogs.com/rickiyang/p/11336268.html
- * http://www.javassist.org/tutorial/tutorial2.html    有很多标识符可以使用，有不同含义。$0 this，$1 入参第一个参数
  * Wrapper.
  */
 public abstract class Wrapper {
@@ -115,12 +117,7 @@ public abstract class Wrapper {
             return OBJECT_WRAPPER;
         }
 
-        Wrapper ret = WRAPPER_MAP.get(c);
-        if (ret == null) {
-            ret = makeWrapper(c);
-            WRAPPER_MAP.put(c, ret);
-        }
-        return ret;
+        return WRAPPER_MAP.computeIfAbsent(c, Wrapper::makeWrapper);
     }
 
     private static Wrapper makeWrapper(Class<?> c) {
@@ -129,60 +126,74 @@ public abstract class Wrapper {
         }
 
         String name = c.getName();
-        ClassLoader cl = ClassUtils.getClassLoader(c); // 1、 当前线程；2、类；3、系统
+        ClassLoader cl = ClassUtils.getClassLoader(c);
 
         StringBuilder c1 = new StringBuilder("public void setPropertyValue(Object o, String n, Object v){ ");
         StringBuilder c2 = new StringBuilder("public Object getPropertyValue(Object o, String n){ ");
-        // $3、$4 主要是找到签名一致的方法调用
         StringBuilder c3 = new StringBuilder("public Object invokeMethod(Object o, String n, Class[] p, Object[] v) throws " + InvocationTargetException.class.getName() + "{ ");
 
-        c1.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }"); // 前置转换 c.getName()
+        c1.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
         c2.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
         c3.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
 
-        Map<String, Class<?>> pts = new HashMap<>(); // <property name, property types> // 类属性名，类属性类型
+        Map<String, Class<?>> pts = new HashMap<>(); // <property name, property types>
         Map<String, Method> ms = new LinkedHashMap<>(); // <method desc, Method instance>
         List<String> mns = new ArrayList<>(); // method names.
         List<String> dmns = new ArrayList<>(); // declaring method names.
 
         // get all public field.
         for (Field f : c.getFields()) {
-            String fn = f.getName(); // 属性名称
+            String fn = f.getName();
             Class<?> ft = f.getType();
             if (Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) {
                 continue;
             }
 
-            c1.append(" if( $2.equals(\"").append(fn).append("\") ){ w.").append(fn).append("=").append(arg(ft, "$3")).append("; return; }"); // setPropertyValue 赋值
-            c2.append(" if( $2.equals(\"").append(fn).append("\") ){ return ($w)w.").append(fn).append("; }"); // 取值
+            c1.append(" if( $2.equals(\"").append(fn).append("\") ){ w.").append(fn).append("=").append(arg(ft, "$3")).append("; return; }");
+            c2.append(" if( $2.equals(\"").append(fn).append("\") ){ return ($w)w.").append(fn).append("; }");
             pts.put(fn, ft);
         }
 
-        Method[] methods = c.getMethods();
+        final ClassPool classPool = new ClassPool(ClassPool.getDefault());
+        classPool.appendClassPath(new CustomizedLoaderClassPath(cl));
+
+        List<String> allMethod = new ArrayList<>();
+        try {
+            final CtMethod[] ctMethods = classPool.get(c.getName()).getMethods();
+            for (CtMethod method : ctMethods) {
+                allMethod.add(ReflectUtils.getDesc(method));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        Method[] methods = Arrays.stream(c.getMethods())
+                                 .filter(method -> allMethod.contains(ReflectUtils.getDesc(method)))
+                                 .collect(Collectors.toList())
+                                 .toArray(new Method[] {});
         // get all public method.
         boolean hasMethod = hasMethods(methods);
         if (hasMethod) {
+            Map<String, Integer> sameNameMethodCount = new HashMap<>((int) (methods.length / 0.75f) + 1);
+            for (Method m : methods) {
+                sameNameMethodCount.compute(m.getName(),
+                        (key, oldValue) -> oldValue == null ? 1 : oldValue + 1);
+            }
+
             c3.append(" try{");
             for (Method m : methods) {
-                //ignore Object's method. // 忽略Object的方法
+                //ignore Object's method.
                 if (m.getDeclaringClass() == Object.class) {
                     continue;
                 }
 
-                String mn = m.getName(); // invokeMethod(Object o, String n, Class[] p, Object[] v)
-                c3.append(" if( \"").append(mn).append("\".equals( $2 ) "); // 方法名相同
+                String mn = m.getName();
+                c3.append(" if( \"").append(mn).append("\".equals( $2 ) ");
                 int len = m.getParameterTypes().length;
-                c3.append(" && ").append(" $3.length == ").append(len); // 入参相同
-                // 校验方法签名是否一致
+                c3.append(" && ").append(" $3.length == ").append(len);
 
-                boolean override = false;
-                for (Method m2 : methods) {
-                    if (m != m2 && m.getName().equals(m2.getName())) {
-                        override = true;
-                        break;
-                    }
-                }
-                if (override) { // 当存在方法名一样、入参数量一样的时候，校验每一个参数类型是否匹配
+                boolean overload = sameNameMethodCount.get(m.getName()) > 1;
+                if (overload) {
                     if (len > 0) {
                         for (int l = 0; l < len; l++) {
                             c3.append(" && ").append(" $3[").append(l).append("].getName().equals(\"")
@@ -193,8 +204,6 @@ public abstract class Wrapper {
 
                 c3.append(" ) { ");
 
-                // invokeMethod(Object o, String n, Class[] p, Object[] v)
-                // invoke 返回结果
                 if (m.getReturnType() == Void.TYPE) {
                     c3.append(" w.").append(mn).append('(').append(args(m.getParameterTypes(), "$4")).append(");").append(" return null;");
                 } else {
@@ -207,7 +216,7 @@ public abstract class Wrapper {
                 if (m.getDeclaringClass() == c) {
                     dmns.add(mn);
                 }
-                ms.put(ReflectUtils.getDesc(m), m); // m是方法
+                ms.put(ReflectUtils.getDesc(m), m);
             }
             c3.append(" } catch(Throwable e) { ");
             c3.append("     throw new java.lang.reflect.InvocationTargetException(e); ");
@@ -217,7 +226,6 @@ public abstract class Wrapper {
         c3.append(" throw new " + NoSuchMethodException.class.getName() + "(\"Not found method \\\"\"+$2+\"\\\" in class " + c.getName() + ".\"); }");
 
         // deal with get/set method.
-        // getPropertyValue(Object o, String n)
         Matcher matcher;
         for (Map.Entry<String, Method> entry : ms.entrySet()) {
             String md = entry.getKey();
@@ -238,7 +246,7 @@ public abstract class Wrapper {
             }
         }
         c1.append(" throw new " + NoSuchPropertyException.class.getName() + "(\"Not found property \\\"\"+$2+\"\\\" field or setter method in class " + c.getName() + ".\"); }");
-        c2.append(" throw new " + NoSuchPropertyException.class.getName() + "(\"Not found property \\\"\"+$2+\"\\\" field or setter method in class " + c.getName() + ".\"); }");
+        c2.append(" throw new " + NoSuchPropertyException.class.getName() + "(\"Not found property \\\"\"+$2+\"\\\" field or getter method in class " + c.getName() + ".\"); }");
 
         // make class
         long id = WRAPPER_CLASS_COUNTER.getAndIncrement();
@@ -275,7 +283,7 @@ public abstract class Wrapper {
             for (Method m : ms.values()) {
                 wc.getField("mts" + ix++).set(null, m.getParameterTypes());
             }
-            return (Wrapper) wc.newInstance();
+            return (Wrapper) wc.getDeclaredConstructor().newInstance();
         } catch (RuntimeException e) {
             throw e;
         } catch (Throwable e) {

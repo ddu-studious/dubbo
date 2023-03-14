@@ -34,8 +34,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_RETRIES;
-import static org.apache.dubbo.rpc.cluster.Constants.RETRIES_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_RETRIES;
+import static org.apache.dubbo.common.constants.CommonConstants.RETRIES_KEY;
 
 /**
  * 包含路由（RegistryDirectory提供，RouterChain.routers()处理）、负载均衡
@@ -61,10 +61,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         List<Invoker<T>> copyInvokers = invokers;
         checkInvokers(copyInvokers, invocation);
         String methodName = RpcUtils.getMethodName(invocation);
-        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
-        if (len <= 0) {
-            len = 1;
-        }
+        int len = calculateInvokeTimes(methodName);
         // retry loop.
         RpcException le = null; // last exception.
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
@@ -114,6 +111,21 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 + " on the consumer " + NetUtils.getLocalHost() + " using the dubbo version "
                 + Version.getVersion() + ". Last error is: "
                 + le.getMessage(), le.getCause() != null ? le.getCause() : le);
+    }
+
+    private int calculateInvokeTimes(String methodName) {
+        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
+        RpcContext rpcContext = RpcContext.getContext();
+        Object retry = rpcContext.getObjectAttachment(RETRIES_KEY);
+        if (null != retry && retry instanceof Number) {
+            len = ((Number) retry).intValue() + 1;
+            rpcContext.removeAttachment(RETRIES_KEY);
+        }
+        if (len <= 0) {
+            len = 1;
+        }
+
+        return len;
     }
 
 }

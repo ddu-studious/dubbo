@@ -32,7 +32,7 @@ public interface Constants {
 
     String DECODE_IN_IO_THREAD_KEY = "decode.in.io";
 
-    boolean DEFAULT_DECODE_IN_IO_THREAD = true;
+    boolean DEFAULT_DECODE_IN_IO_THREAD = false;
 
     /**
      * callback inst id
@@ -60,10 +60,19 @@ public interface Constants {
      */
     boolean DEFAULT_LAZY_CONNECT_INITIAL_STATE = true;
 
+    /**
+     * when this warning rises from invocation, program probably have bug.
+     */
+    String LAZY_REQUEST_WITH_WARNING_KEY = "lazyclient_request_with_warning";
+
+    boolean DEFAULT_LAZY_REQUEST_WITH_WARNING = false;
+
     String OPTIMIZER_KEY = "optimizer";
 
     String ON_CONNECT_KEY = "onconnect";
 
     String ON_DISCONNECT_KEY = "ondisconnect";
+
+    String ASYNC_METHOD_INFO = "async-method-info";
 
 }

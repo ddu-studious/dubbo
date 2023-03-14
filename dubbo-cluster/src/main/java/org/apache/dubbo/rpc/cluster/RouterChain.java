@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
+
 /**
  * invokers赋值的时机
  * Router chain
@@ -51,7 +53,7 @@ public class RouterChain<T> {
 
     private RouterChain(URL url) { // AppRouter/TagRouter
         List<RouterFactory> extensionFactories = ExtensionLoader.getExtensionLoader(RouterFactory.class)
-                .getActivateExtension(url, (String[]) null);
+                .getActivateExtension(url, ROUTER_KEY);
 
         List<Router> routers = extensionFactories.stream()
                 .map(factory -> factory.getRouter(url))

@@ -25,7 +25,7 @@ import org.apache.dubbo.rpc.proxy.AbstractProxyInvoker;
 import org.apache.dubbo.rpc.proxy.InvokerInvocationHandler;
 
 /**
- * JavaassistRpcProxyFactory
+ * JavassistRpcProxyFactory
  */
 // 默认代理
 public class JavassistProxyFactory extends AbstractProxyFactory {

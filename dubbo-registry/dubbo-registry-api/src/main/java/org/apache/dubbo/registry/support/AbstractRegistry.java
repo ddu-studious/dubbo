@@ -23,6 +23,7 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.apache.dubbo.common.utils.ConfigUtils;
 import org.apache.dubbo.common.utils.NamedThreadFactory;
+import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.common.utils.UrlUtils;
 import org.apache.dubbo.registry.NotifyListener;
 import org.apache.dubbo.registry.Registry;
@@ -36,6 +37,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,12 +55,15 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.dubbo.common.constants.CommonConstants.ANY_VALUE;
 import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATTERN;
 import static org.apache.dubbo.common.constants.CommonConstants.FILE_KEY;
+import static org.apache.dubbo.common.constants.RegistryConstants.ACCEPTS_KEY;
 import static org.apache.dubbo.common.constants.RegistryConstants.CATEGORY_KEY;
 import static org.apache.dubbo.common.constants.RegistryConstants.DEFAULT_CATEGORY;
 import static org.apache.dubbo.common.constants.RegistryConstants.DYNAMIC_KEY;
 import static org.apache.dubbo.common.constants.RegistryConstants.EMPTY_PROTOCOL;
 import static org.apache.dubbo.registry.Constants.REGISTRY_FILESAVE_SYNC_KEY;
+import static org.apache.dubbo.registry.Constants.REGISTRY__LOCAL_FILE_CACHE_ENABLED;
 
 /**
  * AbstractRegistry. (SPI, Prototype, ThreadSafe)
@@ -78,7 +83,7 @@ public abstract class AbstractRegistry implements Registry {
     // File cache timing writing
     private final ExecutorService registryCacheExecutor = Executors.newFixedThreadPool(1, new NamedThreadFactory("DubboSaveRegistryCache", true));
     // Is it synchronized to save the file
-    private final boolean syncSaveFile;
+    private boolean syncSaveFile;
     private final AtomicLong lastCacheChanged = new AtomicLong();
     private final AtomicInteger savePropertiesRetryTimes = new AtomicInteger();
     private final Set<URL> registered = new ConcurrentHashSet<>();
@@ -88,26 +93,28 @@ public abstract class AbstractRegistry implements Registry {
     // Local disk cache file
     private File file;
 
-    // 缓存注册中心服务端提供方接口到文件
     public AbstractRegistry(URL url) {
         setUrl(url);
-        // Start file save timer
-        syncSaveFile = url.getParameter(REGISTRY_FILESAVE_SYNC_KEY, false);
-        String filename = url.getParameter(FILE_KEY, System.getProperty("user.home") + "/.dubbo/dubbo-registry-" + url.getParameter(APPLICATION_KEY) + "-" + url.getAddress() + ".cache");
-        File file = null;
-        if (ConfigUtils.isNotEmpty(filename)) {
-            file = new File(filename);
-            if (!file.exists() && file.getParentFile() != null && !file.getParentFile().exists()) {
-                if (!file.getParentFile().mkdirs()) {
-                    throw new IllegalArgumentException("Invalid registry cache file " + file + ", cause: Failed to create directory " + file.getParentFile() + "!");
+        if (url.getParameter(REGISTRY__LOCAL_FILE_CACHE_ENABLED, true)) {
+            // Start file save timer
+            syncSaveFile = url.getParameter(REGISTRY_FILESAVE_SYNC_KEY, false);
+            String defaultFilename = System.getProperty("user.home") + "/.dubbo/dubbo-registry-" + url.getParameter(APPLICATION_KEY) + "-" + url.getAddress().replaceAll(":", "-") + ".cache";
+            String filename = url.getParameter(FILE_KEY, defaultFilename);
+            File file = null;
+            if (ConfigUtils.isNotEmpty(filename)) {
+                file = new File(filename);
+                if (!file.exists() && file.getParentFile() != null && !file.getParentFile().exists()) {
+                    if (!file.getParentFile().mkdirs()) {
+                        throw new IllegalArgumentException("Invalid registry cache file " + file + ", cause: Failed to create directory " + file.getParentFile() + "!");
+                    }
                 }
             }
+            this.file = file;
+            // When starting the subscription center,
+            // we need to read the local cache file for future Registry fault tolerance processing.
+            loadProperties();
+            notify(url.getBackupUrls());
         }
-        this.file = file;
-        // When starting the subscription center,
-        // we need to read the local cache file for future Registry fault tolerance processing.
-        loadProperties(); // 加载本地文件服务列表
-        notify(url.getBackupUrls());
     }
 
     protected static List<URL> filterEmpty(URL url, List<URL> urls) {
@@ -155,7 +162,6 @@ public abstract class AbstractRegistry implements Registry {
         return lastCacheChanged;
     }
 
-    // 将注册到注册中心的服务保存到文件中
     public void doSaveProperties(long version) {
         if (version < lastCacheChanged.get()) {
             return;
@@ -231,9 +237,9 @@ public abstract class AbstractRegistry implements Registry {
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             String key = (String) entry.getKey();
             String value = (String) entry.getValue();
-            if (key != null && key.length() > 0 && key.equals(url.getServiceKey())
+            if (StringUtils.isNotEmpty(key) && key.equals(url.getServiceKey())
                     && (Character.isLetter(key.charAt(0)) || key.charAt(0) == '_')
-                    && value != null && value.length() > 0) {
+                    && StringUtils.isNotEmpty(value)) {
                 String[] arr = value.trim().split(URL_SPLIT);
                 List<URL> urls = new ArrayList<>();
                 for (String u : arr) {
@@ -249,7 +255,7 @@ public abstract class AbstractRegistry implements Registry {
     public List<URL> lookup(URL url) {
         List<URL> result = new ArrayList<>();
         Map<String, List<URL>> notifiedUrls = getNotified().get(url);
-        if (notifiedUrls != null && notifiedUrls.size() > 0) {
+        if (CollectionUtils.isNotEmptyMap(notifiedUrls)) {
             for (List<URL> urls : notifiedUrls.values()) {
                 for (URL u : urls) {
                     if (!EMPTY_PROTOCOL.equals(u.getProtocol())) {
@@ -296,7 +302,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     @Override
-    public void subscribe(URL url, NotifyListener listener) { // listener == RegistryDirectory
+    public void subscribe(URL url, NotifyListener listener) {
         if (url == null) {
             throw new IllegalArgumentException("subscribe url == null");
         }
@@ -325,6 +331,9 @@ public abstract class AbstractRegistry implements Registry {
         if (listeners != null) {
             listeners.remove(listener);
         }
+
+        // do not forget remove notified
+        notified.remove(url);
     }
 
     protected void recover() throws Exception {
@@ -385,8 +394,7 @@ public abstract class AbstractRegistry implements Registry {
      * @param listener listener
      * @param urls     provider latest urls
      */
-    // 保存文件
-    protected void notify(URL url, NotifyListener listener, List<URL> urls) { // listener == RegistryDirectory
+    protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }
@@ -418,7 +426,7 @@ public abstract class AbstractRegistry implements Registry {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
             categoryNotified.put(category, categoryList);
-            listener.notify(categoryList); // 监听路由信息，拉取Providers存入RouterChain（路由器链）
+            listener.notify(categoryList);
             // We will update our cache file after each notification.
             // When our Registry has a subscribe failure due to network jitter, we can return at least the existing cache URL.
             saveProperties(url);
@@ -462,7 +470,7 @@ public abstract class AbstractRegistry implements Registry {
         }
         Set<URL> destroyRegistered = new HashSet<>(getRegistered());
         if (!destroyRegistered.isEmpty()) {
-            for (URL url : new HashSet<>(getRegistered())) {
+            for (URL url : new HashSet<>(destroyRegistered)) {
                 if (url.getParameter(DYNAMIC_KEY, true)) {
                     try {
                         unregister(url);
@@ -491,6 +499,17 @@ public abstract class AbstractRegistry implements Registry {
                 }
             }
         }
+        AbstractRegistryFactory.removeDestroyedRegistry(this);
+    }
+
+    protected boolean acceptable(URL urlToRegistry) {
+        String pattern = registryUrl.getParameter(ACCEPTS_KEY);
+        if (StringUtils.isEmpty(pattern)) {
+            return true;
+        }
+
+        return Arrays.stream(COMMA_SPLIT_PATTERN.split(pattern))
+                .anyMatch(p -> p.equalsIgnoreCase(urlToRegistry.getProtocol()));
     }
 
     @Override

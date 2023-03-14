@@ -29,13 +29,16 @@ import org.apache.dubbo.remoting.exchange.Exchangers;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static org.apache.dubbo.remoting.Constants.SEND_RECONNECT_KEY;
-import static org.apache.dubbo.rpc.protocol.dubbo.Constants.LAZY_CONNECT_INITIAL_STATE_KEY;
 import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_LAZY_CONNECT_INITIAL_STATE;
+import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_LAZY_REQUEST_WITH_WARNING;
+import static org.apache.dubbo.rpc.protocol.dubbo.Constants.LAZY_CONNECT_INITIAL_STATE_KEY;
+import static org.apache.dubbo.rpc.protocol.dubbo.Constants.LAZY_REQUEST_WITH_WARNING_KEY;
 
 /**
  * dubbo protocol support class.
@@ -43,16 +46,12 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.DEFAULT_LAZY_CONNECT
 @SuppressWarnings("deprecation")
 final class LazyConnectExchangeClient implements ExchangeClient {
 
-    /**
-     * when this warning rises from invocation, program probably have bug.
-     */
-    protected static final String REQUEST_WITH_WARNING_KEY = "lazyclient_request_with_warning";
-    private final static Logger logger = LoggerFactory.getLogger(LazyConnectExchangeClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(LazyConnectExchangeClient.class);
     protected final boolean requestWithWarning;
     private final URL url;
     private final ExchangeHandler requestHandler;
     private final Lock connectLock = new ReentrantLock();
-    private final int warning_period = 5000;
+    private final int warningPeriod = 5000;
     /**
      * lazy connect, initial state for connection
      */
@@ -65,7 +64,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
         this.url = url.addParameter(SEND_RECONNECT_KEY, Boolean.TRUE.toString());
         this.requestHandler = requestHandler;
         this.initialState = url.getParameter(LAZY_CONNECT_INITIAL_STATE_KEY, DEFAULT_LAZY_CONNECT_INITIAL_STATE);
-        this.requestWithWarning = url.getParameter(REQUEST_WITH_WARNING_KEY, false);
+        this.requestWithWarning = url.getParameter(LAZY_REQUEST_WITH_WARNING_KEY, DEFAULT_LAZY_REQUEST_WITH_WARNING);
     }
 
     private void initClient() throws RemotingException {
@@ -114,13 +113,27 @@ final class LazyConnectExchangeClient implements ExchangeClient {
         return client.request(request, timeout);
     }
 
+    @Override
+    public CompletableFuture<Object> request(Object request, ExecutorService executor) throws RemotingException {
+        warning();
+        initClient();
+        return client.request(request, executor);
+    }
+
+    @Override
+    public CompletableFuture<Object> request(Object request, int timeout, ExecutorService executor) throws RemotingException {
+        warning();
+        initClient();
+        return client.request(request, timeout, executor);
+    }
+
     /**
      * If {@link #REQUEST_WITH_WARNING_KEY} is configured, then warn once every 5000 invocations.
      */
     private void warning() {
         if (requestWithWarning) {
-            if (warningcount.get() % warning_period == 0) {
-                logger.warn(new IllegalStateException("safe guard client , should not be called ,must have a bug."));
+            if (warningcount.get() % warningPeriod == 0) {
+                logger.warn(url.getAddress() + " " + url.getServiceKey() + " safe guard client , should not be called ,must have a bug.");
             }
             warningcount.incrementAndGet();
         }
@@ -172,7 +185,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
         if (client != null) {
             return client.isClosed();
         } else {
-            return true;
+            return false;
         }
     }
 
@@ -180,6 +193,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
     public void close() {
         if (client != null) {
             client.close();
+            client = null;
         }
     }
 
@@ -187,6 +201,7 @@ final class LazyConnectExchangeClient implements ExchangeClient {
     public void close(int timeout) {
         if (client != null) {
             client.close(timeout);
+            client = null;
         }
     }
 
