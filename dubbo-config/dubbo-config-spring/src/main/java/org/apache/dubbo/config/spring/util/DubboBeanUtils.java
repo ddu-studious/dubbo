@@ -70,7 +70,7 @@ public abstract class DubboBeanUtils {
 
         // Since 2.7.4 [Feature] https://github.com/apache/dubbo/issues/5093
         registerInfrastructureBean(registry, DubboConfigAliasPostProcessor.BEAN_NAME,
-                DubboConfigAliasPostProcessor.class);
+                DubboConfigAliasPostProcessor.class); // 别名配置
 
         // Since 2.7.9 Register DubboApplicationListenerRegister as an infrastructure Bean
         // https://github.com/apache/dubbo/issues/6559
