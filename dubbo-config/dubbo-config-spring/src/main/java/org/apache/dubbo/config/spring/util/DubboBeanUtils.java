@@ -84,7 +84,7 @@ public abstract class DubboBeanUtils {
         //        DubboBootstrapApplicationListener.class);
 
         registerInfrastructureBean(registry, DubboApplicationListenerRegistrar.BEAN_NAME,
-                DubboApplicationListenerRegistrar.class);
+                DubboApplicationListenerRegistrar.class); // 生命周期加载、启动
 
         // Since 2.7.6 Register DubboConfigDefaultPropertyValueBeanPostProcessor as an infrastructure Bean
         registerInfrastructureBean(registry, DubboConfigDefaultPropertyValueBeanPostProcessor.BEAN_NAME,

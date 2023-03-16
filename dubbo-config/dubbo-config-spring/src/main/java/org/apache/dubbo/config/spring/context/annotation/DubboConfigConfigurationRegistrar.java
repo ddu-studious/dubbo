@@ -52,10 +52,10 @@ public class DubboConfigConfigurationRegistrar implements ImportBeanDefinitionRe
         boolean multiple = attributes.getBoolean("multiple");
 
         // Single Config Bindings
-        registerBeans(registry, DubboConfigConfiguration.Single.class);
+        registerBeans(registry, DubboConfigConfiguration.Single.class); // AbstractConfig 子类配置加载
 
         if (multiple) { // Since 2.6.6 https://github.com/apache/dubbo/issues/3193
-            registerBeans(registry, DubboConfigConfiguration.Multiple.class);
+            registerBeans(registry, DubboConfigConfiguration.Multiple.class); // AbstractConfig 子类配置加载
         }
 
         // Since 2.7.6

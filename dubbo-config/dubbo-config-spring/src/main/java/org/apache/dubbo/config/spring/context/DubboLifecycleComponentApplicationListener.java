@@ -67,8 +67,8 @@ public class DubboLifecycleComponentApplicationListener extends OnceApplicationC
     }
 
     protected void onContextRefreshedEvent(ContextRefreshedEvent event) {
-        initLifecycleComponents(event);
-        startLifecycleComponents();
+        initLifecycleComponents(event); // 加载
+        startLifecycleComponents(); // 启动
     }
 
     protected void onContextClosedEvent(ContextClosedEvent event) {
