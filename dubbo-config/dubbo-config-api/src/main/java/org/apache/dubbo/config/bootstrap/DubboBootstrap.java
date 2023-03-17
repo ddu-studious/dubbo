@@ -884,6 +884,7 @@ public class DubboBootstrap {
                 logger.info(NAME + " is starting...");
             }
             // 1. export Dubbo Services
+            // 发布Dubbo服务
             exportServices();
 
             // Not only provider register

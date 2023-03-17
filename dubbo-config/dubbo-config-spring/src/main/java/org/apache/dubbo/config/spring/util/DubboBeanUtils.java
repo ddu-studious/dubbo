@@ -66,7 +66,7 @@ public abstract class DubboBeanUtils {
 
         // Since 2.5.7 Register @Reference Annotation Bean Processor as an infrastructure Bean
         registerInfrastructureBean(registry, ReferenceAnnotationBeanPostProcessor.BEAN_NAME,
-                ReferenceAnnotationBeanPostProcessor.class);
+                ReferenceAnnotationBeanPostProcessor.class); // @Reference、@DubboReference 注解，代理解析
 
         // Since 2.7.4 [Feature] https://github.com/apache/dubbo/issues/5093
         registerInfrastructureBean(registry, DubboConfigAliasPostProcessor.BEAN_NAME,
@@ -84,15 +84,16 @@ public abstract class DubboBeanUtils {
         //        DubboBootstrapApplicationListener.class);
 
         registerInfrastructureBean(registry, DubboApplicationListenerRegistrar.BEAN_NAME,
-                DubboApplicationListenerRegistrar.class); // 生命周期加载、启动
+                DubboApplicationListenerRegistrar.class); // 生命周期加载、 Dubbo 启动
 
         // Since 2.7.6 Register DubboConfigDefaultPropertyValueBeanPostProcessor as an infrastructure Bean
         registerInfrastructureBean(registry, DubboConfigDefaultPropertyValueBeanPostProcessor.BEAN_NAME,
-                DubboConfigDefaultPropertyValueBeanPostProcessor.class);
+                DubboConfigDefaultPropertyValueBeanPostProcessor.class); // AbstractConfig 属性默认值维护 [id/name/ProtocolConfig-name(特殊逻辑)]
 
         // Since 2.7.15 Register DubboConfigEarlyRegistrationPostProcessor as an infrastructure Bean
         registerInfrastructureBean(registry, DubboConfigEarlyRegistrationPostProcessor.BEAN_NAME,
-                DubboConfigEarlyRegistrationPostProcessor.class);
+                DubboConfigEarlyRegistrationPostProcessor.class); // 将 DubboConfigEarlyInitializationPostProcessor加入到 AbstractBeanFactory.beanPostProcessors中
+        // DubboConfigEarlyInitializationPostProcessor 主要工作是判断 CommonAnnotationBeanPostProcessor 是否已经注册，未注册有配置操作
     }
 
     /**

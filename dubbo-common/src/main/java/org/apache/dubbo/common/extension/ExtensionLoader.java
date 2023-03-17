@@ -425,18 +425,19 @@ public class ExtensionLoader<T> {
      * will be thrown.
      */
     @SuppressWarnings("unchecked")
-    public T getExtension(String name) {
+    public T getExtension(String name) { // 单例
         return getExtension(name, true);
     }
 
-    public T getExtension(String name, boolean wrap) {
+    // wrap 是否Wrapper包装
+    public T getExtension(String name, boolean wrap) { // 单例
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Extension name == null");
         }
         if ("true".equals(name)) {
             return getDefaultExtension();
         }
-        final Holder<Object> holder = getOrCreateHolder(name);
+        final Holder<Object> holder = getOrCreateHolder(name); // 单例的
         Object instance = holder.get();
         if (instance == null) {
             synchronized (holder) {

@@ -55,14 +55,14 @@ public class DubboConfigDefaultPropertyValueBeanPostProcessor extends GenericBea
 
     protected void processBeforeInitialization(AbstractConfig dubboConfigBean, String beanName) throws BeansException {
         // [Feature] https://github.com/apache/dubbo/issues/5721
-        setBeanNameAsDefaultValue(dubboConfigBean, "id", beanName);
+        setBeanNameAsDefaultValue(dubboConfigBean, "id", beanName); // AbstractConfig id属性如果为空，则赋值
         if (dubboConfigBean instanceof ProtocolConfig) {
             ProtocolConfig config = (ProtocolConfig) dubboConfigBean;
             if (StringUtils.isEmpty(config.getName())) {
-                config.setName("dubbo");
+                config.setName("dubbo"); // 协议名称
             }
         } else {
-            setBeanNameAsDefaultValue(dubboConfigBean, "name", beanName);
+            setBeanNameAsDefaultValue(dubboConfigBean, "name", beanName); // AbstractConfig name
         }
     }
 

@@ -104,7 +104,7 @@ public abstract class AbstractConfig implements Serializable {
 
     public static String getTagName(Class<?> cls) {
         String tag = cls.getSimpleName();
-        for (String suffix : SUFFIXES) {
+        for (String suffix : SUFFIXES) { // Config/Bean/ConfigBase
             if (tag.endsWith(suffix)) {
                 tag = tag.substring(0, tag.length() - suffix.length());
                 break;
@@ -588,7 +588,7 @@ public abstract class AbstractConfig implements Serializable {
      * @since 2.7.5
      */
     @PostConstruct
-    public void addIntoConfigManager() {
+    public void addIntoConfigManager() {  // 将ServiceBean、ReferenceBean或者其他该类的实现类，添加到配置管理器中。
         ApplicationModel.getConfigManager().addConfig(this);
     }
 

@@ -119,7 +119,7 @@ public class DubboConfigEarlyRegistrationPostProcessor implements BeanDefinition
                     logger.warn("CommonAnnotationBeanPostProcessor is not registered yet, " +
                             "the method addIntoConfigManager() will be invoked directly");
                 }
-                config.addIntoConfigManager();
+                config.addIntoConfigManager(); //
             }
         }
 

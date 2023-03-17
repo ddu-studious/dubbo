@@ -63,6 +63,7 @@ public class DubboClassPathBeanDefinitionScanner extends ClassPathBeanDefinition
 
     }
 
+    // 判断是否已经存在，不存在则可以加载，存在则跳过
     @Override
     public boolean checkCandidate(String beanName, BeanDefinition beanDefinition) throws IllegalStateException {
         return super.checkCandidate(beanName, beanDefinition);

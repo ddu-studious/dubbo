@@ -50,7 +50,7 @@ public class DubboApplicationListenerRegistrar implements ApplicationContextAwar
     }
 
     private ApplicationListener<?> createDubboBootstrapApplicationListener(ConfigurableApplicationContext context) {
-        return new DubboBootstrapApplicationListener(context);
+        return new DubboBootstrapApplicationListener(context); // Dubbo 启动类
     }
 
     private ApplicationListener<?> createDubboLifecycleComponentApplicationListener(ConfigurableApplicationContext context) {

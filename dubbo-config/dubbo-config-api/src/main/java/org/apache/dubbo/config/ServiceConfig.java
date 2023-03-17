@@ -238,7 +238,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             doExport();
         }
 
-        exported();
+        exported(); // 发布服务已发布事件
     }
 
     public void exported() {
@@ -252,7 +252,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             }
         });
         // dispatch a ServiceConfigExportedEvent since 2.7.4
-        dispatch(new ServiceConfigExportedEvent(this));
+        dispatch(new ServiceConfigExportedEvent(this)); // 发布已发布消息
     }
 
     private void checkAndUpdateSubConfigs() {
